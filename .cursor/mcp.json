@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "genmail": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "env": {}
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:zanHuh-3ryxke-xifxyt@db.qrxzrsmpmllggnopbqze.supabase.co:5432/postgres"
+      ]
+    }
+  }
+}
