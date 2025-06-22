@@ -92,23 +92,31 @@ export default function Home() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create inbox");
-      }
-
       const data = await response.json();
 
-      if (data.success) {
+      if (response.ok && data.success) {
         setEmailAddress(data.emailAddress);
         setExpiresAt(new Date(data.expiresAt));
         setInboxId(data.inboxId);
       } else {
-        throw new Error(data.error || "Unknown error occurred");
+        // Handle different types of errors
+        if (response.status === 429 || data.code === "RATE_LIMIT_EXCEEDED") {
+          alert(
+            "⏱️ Rate Limit Reached\n\n" +
+              "You can only create 5 temporary emails per hour. Please wait a bit or upgrade to Pro for unlimited access.\n\n" +
+              "💡 Tip: Upgrade to Pro to get unlimited inboxes with custom lifespans!"
+          );
+        } else {
+          alert(
+            `Failed to generate inbox: ${
+              data.message || data.error || "Please try again."
+            }`
+          );
+        }
       }
     } catch (error) {
       console.error("Error generating inbox:", error);
-      // TODO: Show error message to user with proper UI
-      alert("Failed to generate inbox. Please try again.");
+      alert("Network error: Please check your connection and try again.");
     } finally {
       setIsGenerating(false);
     }
