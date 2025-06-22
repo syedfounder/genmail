@@ -1,23 +1,50 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase client with validation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Helper function to validate and clean URL
+function validateSupabaseUrl(url: string): string {
+  if (!url) {
+    throw new Error("Supabase URL is required");
+  }
 
-if (!supabaseUrl) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
+  // Remove any potential "value: " prefix that might be causing issues
+  const cleanUrl = url.replace(/^value:\s*/, "").trim();
+
+  // Ensure it starts with https://
+  if (!cleanUrl.startsWith("https://")) {
+    throw new Error(`Invalid Supabase URL format: ${cleanUrl}`);
+  }
+
+  // Validate it's a proper URL
+  try {
+    new URL(cleanUrl);
+    return cleanUrl;
+  } catch {
+    throw new Error(`Invalid Supabase URL: ${cleanUrl}`);
+  }
 }
-
-if (!supabaseServiceKey) {
-  throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST() {
   try {
     console.log("Creating inbox - starting process");
+
+    // Initialize Supabase client with validation
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl) {
+      throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
+    }
+
+    if (!supabaseServiceKey) {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+    }
+
+    // Validate and clean the URL
+    const cleanSupabaseUrl = validateSupabaseUrl(supabaseUrl);
+
+    // Create Supabase client
+    const supabase = createClient(cleanSupabaseUrl, supabaseServiceKey);
 
     // Generate a random email address with the correct domain
     const randomId = Math.random().toString(36).substring(2, 8);
