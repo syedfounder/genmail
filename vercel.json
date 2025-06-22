@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd genmail && npm run build",
+  "outputDirectory": "genmail/.next",
+  "installCommand": "cd genmail && npm install",
+  "framework": "nextjs",
+  "functions": {
+    "genmail/src/app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
+} 
