@@ -6,8 +6,8 @@ function validateSupabaseUrl(url: string): string {
     throw new Error("Supabase URL is required");
   }
 
-  // Remove any potential "value: " prefix that might be causing issues
-  const cleanUrl = url.replace(/^value:\s*/, "").trim();
+  // Remove any potential "value: " or "Value: " prefix that might be causing issues
+  const cleanUrl = url.replace(/^value:\s*/i, "").trim();
 
   // Ensure it starts with https://
   if (!cleanUrl.startsWith("https://")) {
