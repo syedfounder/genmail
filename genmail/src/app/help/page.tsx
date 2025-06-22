@@ -645,8 +645,8 @@ export default function HelpCenter() {
                 Still Need Help?
               </h2>
               <p className="font-sans text-muted-foreground mb-6">
-                Can't find what you're looking for? Our support team is here to
-                help.
+                Can&apos;t find what you&apos;re looking for? Our support team
+                is here to help.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
@@ -694,7 +694,15 @@ export default function HelpCenter() {
 }
 
 // Help Article Component
-function HelpArticle({ article }: { article: any }) {
+interface Article {
+  id: number;
+  title: string;
+  description: string;
+  content: string;
+  tags: string[];
+}
+
+function HelpArticle({ article }: { article: Article }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

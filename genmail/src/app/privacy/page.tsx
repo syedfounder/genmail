@@ -73,10 +73,11 @@ export default function PrivacyPolicy() {
               </h2>
               <p className="font-sans text-muted-foreground leading-relaxed">
                 At <span className="font-serif font-semibold">genmail</span>,
-                privacy is not just a feature—it's our core principle. This
+                privacy is not just a feature—it&apos;s our core principle. This
                 Privacy Policy explains how we collect, use, and protect your
                 information when you use our temporary email service. We believe
-                in complete transparency about our data practices.
+                in complete transparency about our data practices. We&apos;re
+                committed to &ldquo;privacy by design&rdquo; principles.
               </p>
             </section>
 
@@ -117,12 +118,13 @@ export default function PrivacyPolicy() {
 
                 <div className="bg-background/60 border border-border/50 rounded-xl p-6">
                   <h3 className="font-sans font-semibold text-xl mb-3">
-                    What We DON'T Collect
+                    What We DON&apos;T Collect
                   </h3>
                   <ul className="font-sans space-y-2 text-muted-foreground">
                     <li>• Personal identification information</li>
                     <li>
-                      • Account registration data (we don't require accounts)
+                      • Account registration data (we don&apos;t require
+                      accounts)
                     </li>
                     <li>• Payment information (our service is free)</li>
                     <li>• Location data beyond IP geolocation</li>
@@ -455,7 +457,9 @@ export default function PrivacyPolicy() {
                       do:
                     </p>
                     <ul className="font-sans space-y-1 text-sm text-muted-foreground">
-                      <li>• We'll update the "Last updated" date</li>
+                      <li>
+                        • We&apos;ll update the &ldquo;Last updated&rdquo; date
+                      </li>
                       <li>
                         • Major changes will be highlighted on our homepage
                       </li>

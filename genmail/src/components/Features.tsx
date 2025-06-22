@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { FaRegEye, FaDatabase, FaCookieBite } from "react-icons/fa";
 import { HiSpeakerphone } from "react-icons/hi";
 import { IoIosWarning } from "react-icons/io";
@@ -19,13 +18,6 @@ const features = [
     title: "Accessible for Everyone",
     description: "Full support for dark, light, and high-contrast themes.",
   },
-];
-
-const orbitingIcons = [
-  { Icon: FaRegEye, angle: -150 },
-  { Icon: HiSpeakerphone, angle: -110 },
-  { Icon: FaDatabase, angle: -70 },
-  { Icon: FaCookieBite, angle: -30 },
 ];
 
 export default function Features() {

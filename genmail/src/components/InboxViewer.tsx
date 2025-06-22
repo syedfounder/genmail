@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -163,6 +163,18 @@ export default function InboxViewer({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
+
+  // Calculate time remaining
+  const getTimeRemaining = useCallback(() => {
+    const now = new Date().getTime();
+    const expiry = expiresAt.getTime();
+    const remaining = Math.max(0, expiry - now);
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    return { minutes, seconds, expired: remaining <= 0 };
+  }, [expiresAt]);
+
+  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining);
 
   // Manual refresh function for when realtime is disabled
   const refreshEmails = async () => {
@@ -329,19 +341,7 @@ export default function InboxViewer({
       }
       clearInterval(interval);
     };
-  }, [inboxId, expiresAt]);
-
-  // Calculate time remaining
-  const getTimeRemaining = () => {
-    const now = new Date().getTime();
-    const expiry = expiresAt.getTime();
-    const remaining = Math.max(0, expiry - now);
-    const minutes = Math.floor(remaining / 60000);
-    const seconds = Math.floor((remaining % 60000) / 1000);
-    return { minutes, seconds, expired: remaining <= 0 };
-  };
-
-  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
+  }, [inboxId, expiresAt, getTimeRemaining]);
 
   const handleManualRefresh = () => {
     refreshEmails();
@@ -394,7 +394,7 @@ export default function InboxViewer({
               </h2>
               <p className="text-sm text-muted-foreground mt-1 truncate">
                 <span className="font-semibold text-foreground/80">
-                {emailAddress}
+                  {emailAddress}
                 </span>
               </p>
             </div>
@@ -421,11 +421,11 @@ export default function InboxViewer({
                 onClick={handleManualRefresh}
                 variant="outline"
                 size="sm"
-              disabled={isLoading}
+                disabled={isLoading}
               >
-              {isLoading ? "Refreshing..." : "Refresh"}
+                {isLoading ? "Refreshing..." : "Refresh"}
               </Button>
-              </div>
+            </div>
           </div>
         </div>
 
@@ -445,20 +445,20 @@ export default function InboxViewer({
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   Emails sent to your address will appear here.
-            </p>
-          </div>
+                </p>
+              </div>
             )}
             <ul>
               {emails.map((email) => (
                 <li
-              key={email.id}
+                  key={email.id}
                   onClick={() => setSelectedEmail(email)}
                   className={`p-4 cursor-pointer border-b border-border transition-colors ${
                     selectedEmail?.id === email.id
                       ? "bg-blue-500/10"
                       : "hover:bg-muted"
                   }`}
-            >
+                >
                   <div className="flex justify-between items-baseline">
                     <p className="font-semibold text-sm truncate text-foreground">
                       {email.from_address}
@@ -513,12 +513,12 @@ export default function InboxViewer({
                             att.content_type,
                             att.filename,
                             att.file_size
-                      );
-                      return (
+                          );
+                          return (
                             <li
                               key={att.id}
                               className="border border-border rounded-lg p-3"
-                        >
+                            >
                               <div className="flex items-center gap-3">
                                 <span className="text-2xl">
                                   {getFileIcon(att.content_type, att.filename)}
@@ -554,29 +554,29 @@ export default function InboxViewer({
                           );
                         })}
                       </ul>
-                            </div>
-                          )}
-                        </div>
+                    </div>
+                  )}
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                      <svg
+                <svg
                   className="w-12 h-12 mb-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     strokeWidth="1.5"
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   ></path>
-                      </svg>
+                </svg>
                 <p className="font-medium">Select an email to read</p>
                 <p className="text-sm">Nothing selected</p>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

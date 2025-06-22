@@ -355,8 +355,8 @@ export default function Home() {
 
                           {/* Instructions */}
                           <p className="font-sans text-sm text-muted-foreground text-center mb-6 leading-relaxed">
-                            Scan with your phone's camera to copy this email
-                            address
+                            Scan with your phone&apos;s camera to copy this
+                            email address
                           </p>
 
                           {/* Close button */}
@@ -1178,8 +1178,8 @@ export default function Home() {
                   Privacy Protection
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Protect your identity when signing up for services you're
-                  unsure about or don't fully trust.
+                  Protect your identity when signing up for services you&apos;re
+                  unsure about or don&apos;t fully trust.
                 </p>
               </div>
             </div>
@@ -1213,8 +1213,8 @@ export default function Home() {
                   One-time Access
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Access content, trials, or services that require registration
-                  but you'll only use once.
+                  Perfect for one-time access to services, forums, or websites
+                  but you&apos;ll only use once.
                 </p>
               </div>
             </div>

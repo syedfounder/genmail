@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase client with validation
@@ -15,7 +15,7 @@ if (!supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log("Creating inbox - starting process");
 

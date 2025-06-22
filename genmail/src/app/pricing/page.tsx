@@ -138,7 +138,7 @@ export default function Pricing() {
                         className="font-sans w-full mb-0 bg-[#000000] hover:bg-[#000000]/90 text-white font-semibold dark:bg-white dark:text-[#000000] dark:hover:bg-white/90 tracking-tight"
                         onClick={() => (window.location.href = "/")}
                       >
-                        You're on this plan
+                        You&apos;re on this plan
                       </Button>
                     </div>
                   </div>

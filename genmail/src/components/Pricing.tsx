@@ -59,7 +59,7 @@ export default function Pricing() {
                     window.scrollTo({ top: 0, behavior: "smooth" })
                   }
                 >
-                  You're on this plan
+                  You&apos;re on this plan
                 </Button>
               </div>
             </div>

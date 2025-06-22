@@ -71,11 +71,6 @@ const config: Config = {
           from: {
             height: "0",
           },
-        },
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
           to: {
             height: "var(--radix-accordion-content-height)",
           },

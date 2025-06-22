@@ -93,7 +93,7 @@ export default function Contact() {
                 Contact Us
               </h1>
               <p className="font-sans text-lg text-muted-foreground mb-4">
-                Get in touch with our team. We're here to help with any
+                Get in touch with our team. We&apos;re here to help with any
                 questions about{" "}
                 <span className="font-serif font-semibold">genmail</span>
               </p>
@@ -207,8 +207,8 @@ export default function Contact() {
                       />
                     </svg>
                     <p className="font-sans text-sm text-green-700 dark:text-green-300">
-                      Thank you! Your message has been sent successfully. We'll
-                      get back to you soon.
+                      Thank you! Your message has been sent successfully.
+                      We&apos;ll get back to you soon.
                     </p>
                   </div>
                 </div>

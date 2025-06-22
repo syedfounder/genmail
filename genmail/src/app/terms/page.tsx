@@ -74,14 +74,17 @@ export default function TermsOfService() {
               <p className="font-sans text-muted-foreground leading-relaxed mb-4">
                 Welcome to{" "}
                 <span className="font-serif font-semibold">genmail</span>. These
-                Terms of Service ("Terms") govern your use of our temporary
-                email service. By accessing or using our service, you agree to
-                be bound by these Terms.
+                Terms of Service (&ldquo;Terms&rdquo;) govern your use of our
+                temporary email service (&ldquo;Service&rdquo;). By accessing or
+                using our Service, you agree to be bound by these Terms. If you
+                disagree with any part of these terms, then you may not access
+                the Service. These terms apply to all visitors, users, and
+                others who access or use the Service (&ldquo;Users&rdquo;).
               </p>
               <div className="bg-[#372F84]/10 border border-[#372F84]/20 rounded-lg p-4">
                 <p className="font-sans text-sm">
                   <strong>Important:</strong> If you do not agree to these
-                  Terms, please do not use our service.
+                  Terms, please do not use our Service.
                 </p>
               </div>
             </section>
@@ -96,7 +99,7 @@ export default function TermsOfService() {
                 <p className="font-sans text-muted-foreground leading-relaxed mb-4">
                   <span className="font-serif font-semibold">genmail</span>{" "}
                   provides temporary, disposable email addresses that
-                  automatically expire after a set period. Our service is
+                  automatically expire after a set period. Our Service is
                   designed to protect your privacy when signing up for services,
                   newsletters, or any situation where you need an email address
                   temporarily.
@@ -187,7 +190,7 @@ export default function TermsOfService() {
                       Compliance with Laws
                     </h3>
                     <p className="font-sans text-muted-foreground text-sm">
-                      You are responsible for ensuring your use of our service
+                      You are responsible for ensuring your use of our Service
                       complies with all applicable local, state, federal, and
                       international laws.
                     </p>
@@ -240,7 +243,7 @@ export default function TermsOfService() {
                       Respectful Use
                     </h3>
                     <p className="font-sans text-muted-foreground text-sm">
-                      Use our service fairly and respectfully. Do not attempt to
+                      Use our Service fairly and respectfully. Do not attempt to
                       overload, hack, or abuse our systems.
                     </p>
                   </div>
@@ -301,7 +304,7 @@ export default function TermsOfService() {
 
               <div className="bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-900/20 border border-blue-200/50 dark:border-blue-800/50 rounded-xl p-6">
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Your privacy is paramount to us. By using our service, you
+                  Your privacy is paramount to us. By using our Service, you
                   acknowledge and agree to our data handling practices as
                   outlined in our Privacy Policy.
                 </p>
@@ -362,13 +365,13 @@ export default function TermsOfService() {
               <div className="space-y-6">
                 <div className="bg-orange-50/50 dark:bg-orange-900/20 border border-orange-200/50 dark:border-orange-800/50 rounded-xl p-6">
                   <h3 className="font-sans font-semibold text-xl mb-3 text-orange-700 dark:text-orange-300">
-                    Service "As-Is"
+                    Service &ldquo;As-Is&rdquo;
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
-                    Our service is provided "as-is" without warranties of any
-                    kind, either express or implied. We do not guarantee that
-                    the service will be uninterrupted, secure, or error-free.
-                    Use at your own risk.
+                    Our Service is provided &ldquo;as-is&rdquo; without
+                    warranties of any kind, either express or implied. We do not
+                    guarantee that the Service will be uninterrupted, secure, or
+                    error-free. Use at your own risk.
                   </p>
                 </div>
 
@@ -396,7 +399,7 @@ export default function TermsOfService() {
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     You agree to indemnify and hold us harmless from any claims,
-                    damages, or expenses arising from your use of the service,
+                    damages, or expenses arising from your use of the Service,
                     violation of these Terms, or infringement of any rights of
                     another party.
                   </p>
@@ -417,7 +420,7 @@ export default function TermsOfService() {
                       By You
                     </h3>
                     <p className="text-muted-foreground text-sm leading-relaxed mb-3">
-                      You may stop using our service at any time by simply
+                      You may stop using our Service at any time by simply
                       closing your browser or navigating away from our website.
                       No formal termination process is required.
                     </p>
@@ -427,7 +430,7 @@ export default function TermsOfService() {
                       By Us
                     </h3>
                     <p className="text-muted-foreground text-sm leading-relaxed mb-3">
-                      We may suspend or terminate your access to our service
+                      We may suspend or terminate your access to our Service
                       immediately if you violate these Terms or engage in
                       prohibited activities.
                     </p>
@@ -437,7 +440,7 @@ export default function TermsOfService() {
                 <div className="mt-6 pt-4 border-t border-border/30">
                   <p className="text-sm text-muted-foreground">
                     <strong>Effect of Termination:</strong> Upon termination,
-                    your right to use the service ceases immediately. Any
+                    your right to use the Service ceases immediately. Any
                     temporary emails and data will be deleted according to our
                     normal expiration schedule.
                   </p>
@@ -458,14 +461,14 @@ export default function TermsOfService() {
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>
-                    • We will update the "Last updated" date at the top of this
-                    page
+                    • We will update the &ldquo;Last updated&rdquo; date at the
+                    top of this page
                   </li>
                   <li>
                     • Significant changes will be highlighted on our homepage
                   </li>
                   <li>
-                    • Continued use of the service after changes constitutes
+                    • Continued use of the Service after changes constitutes
                     acceptance
                   </li>
                   <li>

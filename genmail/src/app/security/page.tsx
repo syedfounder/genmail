@@ -74,11 +74,12 @@ export default function Security() {
               </h2>
               <p className="font-sans text-muted-foreground leading-relaxed">
                 At <span className="font-serif font-semibold">genmail</span>,
-                security isn't an afterthought—it's built into every aspect of
-                our service. We understand that trust is paramount when handling
-                your email communications, even temporary ones. This page
-                outlines the comprehensive security measures we've implemented
-                to protect your data and ensure your privacy.
+                security isn&apos;t an afterthought—it&apos;s built into every
+                aspect of our service. We understand that trust is paramount
+                when handling your email communications, even temporary ones.
+                This page outlines the comprehensive security measures
+                we&apos;ve implemented to protect your data and ensure your
+                privacy.
               </p>
             </section>
 
@@ -250,9 +251,9 @@ export default function Security() {
                   </h3>
                   <div className="font-sans text-muted-foreground text-sm space-y-3">
                     <p>
-                      <strong>No Persistent Storage:</strong> We don't maintain
-                      logs or backups of your email content beyond the temporary
-                      inbox lifetime.
+                      <strong>No Persistent Storage:</strong> We don&apos;t
+                      maintain logs or backups of your email content beyond the
+                      temporary inbox lifetime.
                     </p>
                     <p>
                       <strong>Minimal Metadata:</strong> Only essential delivery
@@ -438,9 +439,9 @@ export default function Security() {
               <div className="bg-background/60 border border-border/50 rounded-xl p-6">
                 <p className="font-sans text-muted-foreground leading-relaxed mb-6">
                   We believe in responsible disclosure and welcome security
-                  researchers to help us improve our security posture. If you
-                  discover a security vulnerability, please follow our
-                  responsible disclosure process.
+                  researchers to help us improve our security posture. If
+                  you&apos;ve discovered a security vulnerability in genmail,
+                  please follow our responsible disclosure process.
                 </p>
 
                 <div className="space-y-4">
