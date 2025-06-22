@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import InboxViewer from "@/components/InboxViewer";
 import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import MobileHeader from "@/components/MobileHeader";
+import InboxViewer from "@/components/InboxViewer";
+import supabase from "@/lib/supabaseClient";
 import SeoContent from "@/components/SeoContent";
 import HowItWorks from "@/components/HowItWorks";
-
 import Pricing from "@/components/Pricing";
 import { QRCodeSVG } from "qrcode.react";
-import { supabase } from "@/lib/supabaseClient";
 
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -145,54 +146,8 @@ export default function Home() {
         </>
       )}
 
-      {/* Header */}
-      <header className="flex justify-between items-center p-6 relative z-10">
-        <div className="flex items-center gap-6">
-          {mounted && (
-            <Image
-              src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
-              alt="Genmail Logo"
-              width={80}
-              height={28}
-            />
-          )}
-          <a
-            href="/pricing"
-            className="font-sans text-sm text-muted-foreground transition-colors font-normal hover:text-foreground"
-          >
-            Pricing
-          </a>
-          <a
-            href="/contact"
-            className="font-sans text-sm text-muted-foreground transition-colors font-normal hover:text-foreground"
-          >
-            Contact Us
-          </a>
-          <a
-            href="/help"
-            className="font-sans text-sm text-muted-foreground transition-colors font-normal hover:text-foreground"
-          >
-            Help
-          </a>
-          <button className="font-sans text-sm border border-foreground/30 hover:border-foreground/50 bg-transparent px-3 py-1.5 rounded-md transition-colors">
-            Sponsor Us
-          </button>
-        </div>
-        <div className="font-sans flex items-center gap-2">
-          <a
-            href="/login"
-            className="font-sans text-sm text-muted-foreground transition-colors font-normal hover:text-foreground px-3 py-2"
-          >
-            Login
-          </a>
-          <a href="/signup">
-            <Button className="font-sans bg-foreground hover:bg-foreground/90 text-background">
-              Get Started
-            </Button>
-          </a>
-          <ThemeToggle />
-        </div>
-      </header>
+      {/* Mobile-Optimized Header */}
+      <MobileHeader currentPage="/" />
 
       {/* Hero Section - Always visible */}
       <main
@@ -1358,8 +1313,8 @@ export default function Home() {
                   <Image
                     src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                     alt="Genmail Logo"
-                    width={80}
-                    height={28}
+                    width={64}
+                    height={22}
                   />
                 )}
               </div>

@@ -32,8 +32,8 @@ export default function Security() {
                   <Image
                     src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                     alt="Genmail Logo"
-                    width={100}
-                    height={35}
+                    width={64}
+                    height={22}
                   />
                 )}
               </Link>

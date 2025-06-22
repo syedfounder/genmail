@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import MobileHeader from "@/components/MobileHeader";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -46,56 +47,8 @@ export default function Pricing() {
       disableTransitionOnChange
     >
       <div className="min-h-screen bg-background text-foreground">
-        {/* Header */}
-        <header className="flex justify-between items-center p-6 relative z-10">
-          <div className="flex items-center gap-6">
-            <Link href="/">
-              {mounted && (
-                <Image
-                  src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
-                  alt="Genmail Logo"
-                  width={80}
-                  height={28}
-                />
-              )}
-            </Link>
-            <Link
-              href="/pricing"
-              className="font-sans text-sm text-foreground transition-colors font-medium hover:text-foreground"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/contact"
-              className="font-sans text-sm text-muted-foreground transition-colors font-normal hover:text-foreground"
-            >
-              Contact Us
-            </Link>
-            <Link
-              href="/help"
-              className="font-sans text-sm text-muted-foreground transition-colors font-normal hover:text-foreground"
-            >
-              Help
-            </Link>
-            <button className="font-sans text-sm border border-foreground/30 hover:border-foreground/50 bg-transparent px-3 py-1.5 rounded-md transition-colors">
-              Sponsor Us
-            </button>
-          </div>
-          <div className="font-sans flex items-center gap-2">
-            <Link
-              href="/login"
-              className="font-sans text-sm text-muted-foreground transition-colors font-normal hover:text-foreground px-3 py-2"
-            >
-              Login
-            </Link>
-            <Link href="/signup">
-              <Button className="font-sans bg-foreground hover:bg-foreground/90 text-background">
-                Get Started
-              </Button>
-            </Link>
-            <ThemeToggle />
-          </div>
-        </header>
+        {/* Mobile-Optimized Header */}
+        <MobileHeader currentPage="/pricing" />
 
         {/* Main Content */}
         <main className="font-sans max-w-6xl mx-auto px-6 py-16">
@@ -335,8 +288,8 @@ export default function Pricing() {
                     <Image
                       src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                       alt="Genmail Logo"
-                      width={80}
-                      height={28}
+                      width={64}
+                      height={22}
                     />
                   )}
                 </div>

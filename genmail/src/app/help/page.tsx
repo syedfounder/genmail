@@ -262,7 +262,7 @@ export default function HelpCenter() {
         <p>We accept emails up to 25MB. Larger emails will be rejected.</p>
         
         <h3>Still Having Issues?</h3>
-        <p>Contact our support team at support@genmail.io with details about the sending service.</p>
+                                <p>Contact our support team at support@genmail.app with details about the sending service.</p>
       `,
       tags: ["troubleshooting", "delivery", "spam", "blocking"],
     },
@@ -286,7 +286,7 @@ export default function HelpCenter() {
         <p>Planned features include programmatic email generation and webhook notifications.</p>
         
         <h3>Developer Support</h3>
-        <p>Contact us at support@genmail.io for enterprise integration discussions.</p>
+                                <p>Contact us at support@genmail.app for enterprise integration discussions.</p>
       `,
       tags: ["api", "integration", "development", "testing"],
     },
@@ -433,8 +433,8 @@ export default function HelpCenter() {
                   <Image
                     src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                     alt="Genmail Logo"
-                    width={100}
-                    height={35}
+                    width={64}
+                    height={22}
                   />
                 )}
               </Link>
@@ -656,7 +656,7 @@ export default function HelpCenter() {
                   Contact Support
                 </Link>
                 <a
-                  href="mailto:support@genmail.io"
+                  href="mailto:support@genmail.app"
                   className="font-sans border border-foreground text-foreground hover:bg-foreground/5 px-6 py-3 rounded-lg transition-colors font-medium"
                 >
                   Email Us Directly

@@ -84,8 +84,8 @@ export default function SignUp() {
                 <Image
                   src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                   alt="Genmail Logo"
-                  width={80}
-                  height={28}
+                  width={64}
+                  height={22}
                 />
               )}
             </Link>

@@ -66,8 +66,8 @@ export default function Contact() {
                   <Image
                     src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                     alt="Genmail Logo"
-                    width={100}
-                    height={35}
+                    width={64}
+                    height={22}
                   />
                 )}
               </Link>
@@ -122,10 +122,10 @@ export default function Contact() {
                   For general inquiries and support
                 </p>
                 <a
-                  href="mailto:support@genmail.io"
+                  href="mailto:support@genmail.app"
                   className="font-sans text-sm text-foreground hover:underline"
                 >
-                  support@genmail.io
+                  support@genmail.app
                 </a>
               </div>
 
@@ -178,10 +178,10 @@ export default function Contact() {
                   Report security vulnerabilities
                 </p>
                 <a
-                  href="mailto:security@genmail.io"
+                  href="mailto:security@genmail.app"
                   className="font-sans text-sm text-foreground hover:underline"
                 >
-                  security@genmail.io
+                  security@genmail.app
                 </a>
               </div>
             </section>
