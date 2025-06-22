@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { Button } from "@/components/ui/button";
 
 // Attachment restrictions (PRD Section 4: Core Features)
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
@@ -161,10 +162,48 @@ export default function InboxViewer({
   const [emails, setEmails] = useState<Email[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
+  // Manual refresh function for when realtime is disabled
+  const refreshEmails = async () => {
+    setIsLoading(true);
+    try {
+      const { data: existingEmails, error: fetchError } = await supabase
+        .from("emails")
+        .select(
+          `
+          *,
+          attachments (
+            id,
+            filename,
+            content_type,
+            file_size,
+            download_url,
+            created_at
+          )
+        `
+        )
+        .eq("inbox_id", inboxId)
+        .order("received_at", { ascending: false });
+
+      if (fetchError) {
+        console.error("Error fetching emails:", fetchError);
+        setError("Failed to load emails");
+      } else {
+        setEmails(existingEmails || []);
+      }
+    } catch (err) {
+      console.error("Error refreshing emails:", err);
+      setError("Failed to refresh emails");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!inboxId) return;
+
+    let isMounted = true;
 
     // Initialize and fetch existing emails
     const initializeInbox = async () => {
@@ -193,20 +232,31 @@ export default function InboxViewer({
 
         if (fetchError) {
           console.error("Error fetching emails:", fetchError);
-          setError("Failed to load emails");
+          if (isMounted) setError("Failed to load emails");
         } else {
-          setEmails(existingEmails || []);
+          if (isMounted) setEmails(existingEmails || []);
         }
       } catch (err) {
         console.error("Error initializing inbox:", err);
-        setError("Failed to initialize inbox");
+        if (isMounted) setError("Failed to initialize inbox");
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     // Subscribe to realtime updates
     const subscribeToEmails = () => {
+      // Temporarily disable realtime to avoid WebSocket errors
+      console.log("Realtime temporarily disabled - use refresh button instead");
+
+      // TODO: Re-enable once WebSocket connection is fixed
+      /*
+      // Clean up existing subscription if any
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+
       const realtimeChannel = supabase
         .channel(`inboxes:${inboxId}`)
         .on(
@@ -220,7 +270,9 @@ export default function InboxViewer({
           (payload) => {
             console.log("New email received:", payload);
             const newEmail = payload.new as Email;
-            setEmails((prevEmails) => [newEmail, ...prevEmails]);
+            if (isMounted) {
+              setEmails((prevEmails) => [newEmail, ...prevEmails]);
+            }
           }
         )
         .on(
@@ -234,11 +286,13 @@ export default function InboxViewer({
           (payload) => {
             console.log("Email updated:", payload);
             const updatedEmail = payload.new as Email;
-            setEmails((prevEmails) =>
-              prevEmails.map((email) =>
-                email.id === updatedEmail.id ? updatedEmail : email
-              )
-            );
+            if (isMounted) {
+              setEmails((prevEmails) =>
+                prevEmails.map((email) =>
+                  email.id === updatedEmail.id ? updatedEmail : email
+                )
+              );
+            }
           }
         )
         .subscribe((status) => {
@@ -246,24 +300,36 @@ export default function InboxViewer({
           if (status === "SUBSCRIBED") {
             console.log(`Successfully subscribed to inboxes:${inboxId}`);
           } else if (status === "CHANNEL_ERROR") {
-            setError("Failed to connect to realtime updates");
+            if (isMounted) setError("Failed to connect to realtime updates");
           }
         });
 
-      setChannel(realtimeChannel);
+      channelRef.current = realtimeChannel;
+      */
     };
 
     initializeInbox();
     subscribeToEmails();
 
+    // Countdown timer
+    const interval = setInterval(() => {
+      setTimeRemaining(getTimeRemaining());
+      if (new Date() >= expiresAt) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
     // Cleanup function
     return () => {
-      if (channel) {
+      isMounted = false;
+      if (channelRef.current) {
         console.log(`Unsubscribing from inboxes:${inboxId}`);
-        supabase.removeChannel(channel);
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
+      clearInterval(interval);
     };
-  }, [inboxId]);
+  }, [inboxId, expiresAt]);
 
   // Calculate time remaining
   const getTimeRemaining = () => {
@@ -277,14 +343,17 @@ export default function InboxViewer({
 
   const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
 
-  // Update countdown every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining(getTimeRemaining());
-    }, 1000);
+  const handleManualRefresh = () => {
+    refreshEmails();
+  };
 
-    return () => clearInterval(timer);
-  }, [expiresAt]);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+
+  const renderEmailContent = (content: string) => {
+    // A simple approach to render basic HTML.
+    // For production, you MUST use a sanitizer to prevent XSS attacks.
+    return { __html: content };
+  };
 
   if (error) {
     return (
@@ -311,267 +380,187 @@ export default function InboxViewer({
     );
   }
 
+  if (!inboxId) return null;
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {/* Inbox Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Your Inbox</h2>
-            <div className="flex items-center gap-2">
-              <code className="bg-gray-100 dark:bg-gray-900 px-3 py-1 rounded text-blue-600 dark:text-blue-400 font-mono text-sm">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 font-sans">
+      <div className="bg-secondary/50 border border-border rounded-lg shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="p-4 sm:p-6 border-b border-border bg-background/50">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold text-foreground">
+                Your Temporary Inbox
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 truncate">
+                <span className="font-semibold text-foreground/80">
                 {emailAddress}
-              </code>
-              <button
-                onClick={() => navigator.clipboard.writeText(emailAddress)}
-                className="text-gray-500 hover:text-blue-500 transition-colors"
-                title="Copy email address"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div className="text-center">
-            {timeRemaining.expired ? (
-              <div className="text-red-500 font-semibold">
-                <span className="block text-sm">EXPIRED</span>
-                <span className="text-lg">Inbox Destroyed</span>
-              </div>
-            ) : (
-              <div className="text-gray-600 dark:text-gray-300">
-                <span className="block text-sm">Expires in:</span>
-                <span className="text-lg font-mono">
-                  {timeRemaining.minutes}:
-                  {timeRemaining.seconds.toString().padStart(2, "0")}
                 </span>
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Expires in:</p>
+                <p
+                  className={`text-lg font-medium ${
+                    timeRemaining.expired ||
+                    (timeRemaining.minutes === 0 && timeRemaining.seconds <= 59)
+                      ? "text-red-500"
+                      : "text-green-500"
+                  }`}
+                >
+                  {timeRemaining.expired
+                    ? "Expired"
+                    : `${String(timeRemaining.minutes).padStart(
+                        2,
+                        "0"
+                      )}:${String(timeRemaining.seconds).padStart(2, "0")}`}
+                </p>
               </div>
-            )}
+              <Button
+                onClick={handleManualRefresh}
+                variant="outline"
+                size="sm"
+              disabled={isLoading}
+              >
+              {isLoading ? "Refreshing..." : "Refresh"}
+              </Button>
+              </div>
           </div>
         </div>
-      </div>
 
-      {/* Email List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Emails ({emails.length})</h3>
-          {isLoading && (
-            <div className="flex items-center gap-2 text-gray-500">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                />
-              </svg>
-              Loading...
-            </div>
-          )}
-        </div>
-
-        {emails.length === 0 && !isLoading ? (
-          <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <svg
-              className="w-12 h-12 text-gray-400 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-            <h4 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
-              No emails yet
-            </h4>
-            <p className="text-gray-500 dark:text-gray-400">
-              Emails sent to {emailAddress} will appear here automatically
+        {/* Body */}
+        <div className="flex h-[60vh]">
+          {/* Email List */}
+          <div className="w-1/3 border-r border-border overflow-y-auto bg-background/20">
+            {isLoading && emails.length === 0 && (
+              <p className="p-4 text-center text-muted-foreground">
+                Loading emails...
+              </p>
+            )}
+            {!isLoading && emails.length === 0 && (
+              <div className="p-6 text-center">
+                <h3 className="font-semibold text-foreground">
+                  Waiting for emails...
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Emails sent to your address will appear here.
             </p>
           </div>
-        ) : (
-          emails.map((email) => (
-            <div
+            )}
+            <ul>
+              {emails.map((email) => (
+                <li
               key={email.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+                  onClick={() => setSelectedEmail(email)}
+                  className={`p-4 cursor-pointer border-b border-border transition-colors ${
+                    selectedEmail?.id === email.id
+                      ? "bg-blue-500/10"
+                      : "hover:bg-muted"
+                  }`}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm text-gray-600 dark:text-gray-300">
-                      From:
-                    </span>
-                    <span className="font-mono text-sm">
+                  <div className="flex justify-between items-baseline">
+                    <p className="font-semibold text-sm truncate text-foreground">
                       {email.from_address}
-                    </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(email.received_at).toLocaleTimeString()}
+                    </p>
                   </div>
-                  <h4 className="font-semibold text-lg mb-2">
-                    {email.subject || "(No Subject)"}
-                  </h4>
+                  <p className="text-sm text-muted-foreground truncate mt-1">
+                    {email.subject}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Email Content */}
+          <div className="w-2/3 overflow-y-auto p-6 bg-background">
+            {selectedEmail ? (
+              <div>
+                <div className="border-b border-border pb-4">
+                  <h3 className="text-xl font-semibold text-foreground">
+                    {selectedEmail.subject}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    From:{" "}
+                    <span className="font-medium text-foreground/80">
+                      {selectedEmail.from_address}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Received:{" "}
+                    {new Date(selectedEmail.received_at).toLocaleString()}
+                  </p>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {new Date(email.received_at).toLocaleString()}
-                </span>
-              </div>
-
-              <div className="prose prose-sm dark:prose-invert max-w-none mb-4">
                 <div
-                  className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{
-                    __html: email.body || "(Empty message)",
-                  }}
+                  className="prose prose-sm dark:prose-invert max-w-none mt-6"
+                  dangerouslySetInnerHTML={renderEmailContent(
+                    selectedEmail.body
+                  )}
                 />
-              </div>
-
-              {/* Attachments Section */}
-              {email.attachments && email.attachments.length > 0 && (
-                <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
-                  <h5 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                      />
-                    </svg>
-                    Attachments ({email.attachments.length})
-                  </h5>
-
-                  <div className="grid gap-2">
-                    {email.attachments.map((attachment) => {
-                      const validation = isAttachmentAllowed(
-                        attachment.content_type,
-                        attachment.filename,
-                        attachment.file_size
+                {/* Attachment Section */}
+                {selectedEmail.attachments &&
+                  selectedEmail.attachments.length > 0 && (
+                    <div className="mt-8">
+                      <h4 className="font-semibold text-foreground mb-3">
+                        Attachments ({selectedEmail.attachments.length})
+                      </h4>
+                      <ul className="space-y-3">
+                        {selectedEmail.attachments.map((att) => {
+                          const check = isAttachmentAllowed(
+                            att.content_type,
+                            att.filename,
+                            att.file_size
                       );
-
                       return (
-                        <div
-                          key={attachment.id}
-                          className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                            validation.allowed
-                              ? "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                              : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-                          }`}
+                            <li
+                              key={att.id}
+                              className="border border-border rounded-lg p-3"
                         >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <span
-                              className="text-lg"
-                              role="img"
-                              aria-label="File type"
-                            >
-                              {getFileIcon(
-                                attachment.content_type,
-                                attachment.filename
-                              )}
-                            </span>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm truncate">
-                                  {attachment.filename}
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl">
+                                  {getFileIcon(att.content_type, att.filename)}
                                 </span>
-                                {!validation.allowed && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-foreground">
+                                    {att.filename}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatFileSize(att.file_size)}
+                                  </p>
+                                </div>
+                                {check.allowed ? (
+                                  <a
+                                    href={att.download_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                    className="text-sm text-blue-500 hover:text-blue-600 font-medium"
+                                  >
+                                    Download
+                                  </a>
+                                ) : (
+                                  <span
+                                    className="text-sm text-red-500 cursor-not-allowed"
+                                    title={check.reason}
+                                  >
                                     Blocked
                                   </span>
                                 )}
                               </div>
-
-                              <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                                <span>
-                                  {formatFileSize(attachment.file_size)}
-                                </span>
-                                <span>{attachment.content_type}</span>
-                                {!validation.allowed && validation.reason && (
-                                  <span className="text-red-500 dark:text-red-400">
-                                    {validation.reason}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {validation.allowed ? (
-                            <a
-                              href={attachment.download_url}
-                              download={attachment.filename}
-                              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <svg
-                                className="w-4 h-4 mr-1"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                              </svg>
-                              Download
-                            </a>
-                          ) : (
-                            <div className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md cursor-not-allowed">
-                              <svg
-                                className="w-4 h-4 mr-1"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
-                                />
-                              </svg>
-                              Blocked
+                            </li>
+                          );
+                        })}
+                      </ul>
                             </div>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Attachment Policy Notice */}
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="flex items-start gap-2">
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                       <svg
-                        className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0"
+                  className="w-12 h-12 mb-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -579,23 +568,16 @@ export default function InboxViewer({
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
+                    strokeWidth="1.5"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  ></path>
                       </svg>
-                      <div className="text-xs text-blue-700 dark:text-blue-300">
-                        <span className="font-medium">Attachment Policy:</span>{" "}
-                        Max {formatFileSize(MAX_ATTACHMENT_SIZE)} per file.
-                        Allowed types: PDF, Office docs, images (JPG, PNG, GIF,
-                        WebP, SVG), text files, and common archives.
-                      </div>
-                    </div>
-                  </div>
+                <p className="font-medium">Select an email to read</p>
+                <p className="text-sm">Nothing selected</p>
                 </div>
               )}
             </div>
-          ))
-        )}
+        </div>
       </div>
     </div>
   );

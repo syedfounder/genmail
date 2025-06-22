@@ -1,3 +1,7 @@
+// @ts-ignore
+// deno-lint-ignore-file
+/// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -49,28 +53,49 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Verify Mailgun webhook signature
-function verifyMailgunSignature(
+async function verifyMailgunSignature(
   timestamp: string,
   token: string,
   signature: string
-): boolean {
-  const apiKey = Deno.env.get("MAILGUN_WEBHOOK_SIGNING_KEY");
-  if (!apiKey) {
-    console.warn(
-      "MAILGUN_WEBHOOK_SIGNING_KEY not set, skipping signature verification"
-    );
-    return true; // Allow in development
+): Promise<boolean> {
+  const signingKey = Deno.env.get("MAILGUN_WEBHOOK_SIGNING_KEY");
+
+  if (!signingKey) {
+    console.warn("MAILGUN_WEBHOOK_SIGNING_KEY not set, rejecting request");
+    return false; // Reject if no signing key in production
   }
 
-  // Mailgun signature verification
-  // Expected: HMAC-SHA256(timestamp + token, signing_key)
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(apiKey);
-  const messageData = encoder.encode(timestamp + token);
+  try {
+    // Mailgun signature verification: HMAC-SHA256(timestamp + token, signing_key)
+    const encoder = new TextEncoder();
+    const message = encoder.encode(timestamp + token);
+    const key = encoder.encode(signingKey);
 
-  // Note: Full signature verification would require crypto.subtle.importKey
-  // For now, we'll implement basic validation and improve in production
-  return signature.length > 0; // Basic validation
+    // Import the key for HMAC
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      key,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    // Generate the signature
+    const signatureBuffer = await crypto.subtle.sign(
+      "HMAC",
+      cryptoKey,
+      message
+    );
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Compare with provided signature (case-insensitive)
+    return expectedSignature.toLowerCase() === signature.toLowerCase();
+  } catch (error) {
+    console.error("Signature verification error:", error);
+    return false;
+  }
 }
 
 // Calculate spam score based on email content and headers
@@ -278,14 +303,14 @@ serve(async (req) => {
     }
 
     // Verify webhook signature
-    if (
-      !verifyMailgunSignature(
-        webhookData.timestamp!,
-        webhookData.token!,
-        webhookData.signature!
-      )
-    ) {
-      console.error("Invalid Mailgun webhook signature");
+    const signatureValid = await verifyMailgunSignature(
+      webhookData.timestamp!,
+      webhookData.token!,
+      webhookData.signature!
+    );
+
+    if (!signatureValid) {
+      console.error("Mailgun signature verification failed");
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
