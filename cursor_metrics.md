@@ -12,3 +12,4 @@ The number of times a rule is used as context:
 - stripe-integration-rules.mdc: 0
 - security-rules.mdc: 0
 - privacy-compliance-rules.mdc: 1
+ 
