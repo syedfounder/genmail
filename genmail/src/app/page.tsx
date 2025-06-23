@@ -1,12 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import MobileHeader from "@/components/MobileHeader";
 import InboxViewer from "@/components/InboxViewer";
 import supabase from "@/lib/supabaseClient";
