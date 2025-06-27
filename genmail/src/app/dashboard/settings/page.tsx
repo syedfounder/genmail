@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useUser, useAuth } from "@clerk/nextjs";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "@/lib/supabaseClient";
 import {
   Card,
   CardContent,
@@ -38,18 +38,9 @@ export default function SettingsPage() {
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [supabase, setSupabase] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
-    // Initialize Supabase client only on the client side
-    if (typeof window !== "undefined") {
-      const client = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-      setSupabase(client);
-    }
   }, []);
 
   const handleSaveSettings = async () => {

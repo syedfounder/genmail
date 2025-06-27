@@ -23,7 +23,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import {
   PlusCircle,
   Inbox,
@@ -38,6 +37,7 @@ import Link from "next/link";
 import { useInboxStore } from "@/lib/inbox-store";
 import { NewMailboxSheet } from "@/components/NewMailboxSheet";
 import { toast } from "sonner";
+import supabase from "@/lib/supabaseClient";
 
 function timeAgo(date: string) {
   const seconds = Math.floor(
@@ -109,25 +109,12 @@ export default function DashboardPage() {
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
-  const [supabase, setSupabase] = useState<any>(null);
-
   useEffect(() => {
-    // Initialize Supabase client only on the client side
-    if (typeof window !== "undefined") {
-      const client = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-      setSupabase(client);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user && supabase) {
+    if (user) {
       setLoading(true);
       fetchInboxes(user.id, supabase).finally(() => setLoading(false));
     }
-  }, [user, supabase, fetchInboxes]);
+  }, [user, fetchInboxes]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
