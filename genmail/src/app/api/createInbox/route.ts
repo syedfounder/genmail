@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
       expiresAt: data.expires_at,
       ...data,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("[API /api/createInbox] Unhandled exception:", e);
     const errorMessage =
       e instanceof Error ? e.message : "An unknown error occurred";
