@@ -104,6 +104,7 @@ export default function SignupPage() {
   if (pendingVerification) {
     return (
       <AuthLayout>
+        <div id="clerk-captcha" className="mb-4"></div>
         <Card className="mx-auto max-w-md bg-card border-border backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-sans text-card-foreground">
@@ -167,6 +168,7 @@ export default function SignupPage() {
 
   return (
     <AuthLayout>
+      <div id="clerk-captcha" className="mb-4"></div>
       <Card className="w-full max-w-md bg-card border-border backdrop-blur-sm text-card-foreground">
         <CardHeader>
           <CardTitle className="text-3xl font-semibold tracking-tighter font-sans">

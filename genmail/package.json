@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:prod": "npm run security-check && npm run remove-logs && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "security-check": "echo 'Running security checks...' && npm audit --audit-level=moderate",
+    "remove-logs": "find src/app/api -name '*.ts' -exec sed -i.bak '/console\\./d' {} + && find src/app/api -name '*.bak' -delete"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.22.0",

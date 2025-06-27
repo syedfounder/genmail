@@ -50,8 +50,8 @@ export default function RootLayout({
       appearance={{
         variables: { colorPrimary: "#372F84" },
       }}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
+      signInUrl="/login"
+      signUpUrl="/signup"
       afterSignInUrl="/dashboard"
       afterSignUpUrl="/dashboard"
     >

@@ -66,9 +66,7 @@ export default function LoginPage() {
         setError("Invalid email or password.");
       }
     } catch (err: any) {
-      setError(
-        err.errors[0]?.longMessage || "An error occurred during login."
-      );
+      setError(err.errors[0]?.longMessage || "An error occurred during login.");
     } finally {
       setIsLoading(false);
     }

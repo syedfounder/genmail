@@ -28,7 +28,7 @@ export function Header() {
     setMounted(true);
   }, []);
 
-  const authRoutes = ["/sign-in", "/sign-up", "/login", "/signup"];
+  const authRoutes = ["/login", "/signup"];
 
   // Don't render header on dashboard or auth pages
   if (
