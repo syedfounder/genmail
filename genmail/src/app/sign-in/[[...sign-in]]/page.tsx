@@ -5,10 +5,8 @@ import Link from "next/link";
 export default function Page() {
   return (
     <AuthLayout>
-      <div className="flex flex-col items-center text-center">
-        <div className="transform scale-90">
-          <SignIn />
-        </div>
+      <div className="flex flex-col items-center justify-center text-center">
+        <SignIn />
         <Link
           href="/"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"

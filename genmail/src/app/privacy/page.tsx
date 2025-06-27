@@ -32,13 +32,13 @@ export default function PrivacyPolicy() {
 
         {/* Main Content */}
         <main className="flex flex-col items-center flex-1 px-6 pt-10 pb-20 relative z-10">
-          <article className="prose prose-invert lg:prose-xl max-w-4xl w-full">
+          <article className="prose prose-invert lg:prose-xl max-w-4xl w-full font-sans tracking-tight">
             <h1>Privacy Policy</h1>
             <p className="text-muted-foreground">
               How we protect your privacy when using temporary email services
             </p>
             <p className="text-sm text-muted-foreground">
-              Last updated: December 17, 2024
+              Last updated: June 24, 2025
             </p>
 
             {/* Introduction */}
@@ -445,28 +445,7 @@ export default function PrivacyPolicy() {
               </div>
             </section>
 
-            {/* Back to Home */}
-            <div className="text-center pt-12">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-[#372F84] hover:bg-[#372F84]/90 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-                Back to <span className="font-serif">genmail</span>
-              </Link>
-            </div>
+
           </article>
         </main>
         {/* Footer */}

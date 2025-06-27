@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Header } from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
+import { BetaBanner } from "@/components/BetaBanner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -66,9 +67,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {/* Beta Banner */}
-            <div className="bg-[#372F84] text-white text-center py-2 px-4 text-sm font-sans">
-              Beta Version - Features may change during development
-            </div>
+            <BetaBanner />
             <Header />
             {children}
             <Toaster />

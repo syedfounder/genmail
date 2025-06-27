@@ -16,9 +16,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
 import Link from "next/link";
+import { OAuthStrategy } from "@clerk/types";
+import Image from "next/image";
 
 export default function SignupPage() {
   const { isLoaded, signUp, setActive } = useSignUp();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -26,6 +30,21 @@ export default function SignupPage() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const handleOAuthSignUp = async (strategy: OAuthStrategy) => {
+    if (!isLoaded) return;
+    try {
+      await signUp.authenticateWithRedirect({
+        strategy,
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/dashboard",
+      });
+    } catch (err: any) {
+      setError(
+        err.errors?.[0]?.longMessage || `Error signing up with ${strategy}`
+      );
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +54,8 @@ export default function SignupPage() {
 
     try {
       await signUp.create({
+        firstName,
+        lastName,
         emailAddress,
         password,
       });
@@ -83,10 +104,12 @@ export default function SignupPage() {
   if (pendingVerification) {
     return (
       <AuthLayout>
-        <Card className="mx-auto max-w-md bg-card/80 backdrop-blur-sm">
+        <Card className="mx-auto max-w-md bg-card border-border backdrop-blur-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-sans">Verify Email</CardTitle>
-            <CardDescription className="font-sans">
+            <CardTitle className="text-2xl font-sans text-card-foreground">
+              Verify Email
+            </CardTitle>
+            <CardDescription className="font-sans text-muted-foreground">
               Enter the verification code sent to {emailAddress}
             </CardDescription>
           </CardHeader>
@@ -98,7 +121,10 @@ export default function SignupPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="code" className="font-sans">
+                <Label
+                  htmlFor="code"
+                  className="font-sans text-muted-foreground"
+                >
                   Verification Code
                 </Label>
                 <Input
@@ -114,7 +140,7 @@ export default function SignupPage() {
               </div>
               <Button
                 type="submit"
-                className="w-full font-sans"
+                className="w-full font-sans bg-[#372F84] text-white hover:bg-[#372F84]/90"
                 disabled={isLoading}
               >
                 {isLoading ? "Verifying..." : "Verify Email"}
@@ -141,25 +167,122 @@ export default function SignupPage() {
 
   return (
     <AuthLayout>
-      <Card className="mx-auto max-w-md bg-card/80 backdrop-blur-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-sans">Create Account</CardTitle>
-          <CardDescription className="font-sans">
-            Start protecting your privacy with{" "}
-            <span className="font-serif font-semibold text-foreground">
-              genmail
-            </span>
+      <Card className="w-full max-w-md bg-card border-border backdrop-blur-sm text-card-foreground">
+        <CardHeader>
+          <CardTitle className="text-3xl font-semibold tracking-tighter font-sans">
+            Create your account
+          </CardTitle>
+          <CardDescription className="font-sans text-muted-foreground">
+            No credit card required.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-muted-foreground font-sans">
+              Register with
+            </Label>
+            <div className="grid grid-cols-3 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => handleOAuthSignUp("oauth_google")}
+                className="font-sans"
+              >
+                <Image
+                  src="/google.svg"
+                  alt="Google logo"
+                  width={20}
+                  height={20}
+                />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleOAuthSignUp("oauth_github")}
+                className="font-sans"
+              >
+                <Image
+                  src="/github.svg"
+                  alt="GitHub logo"
+                  width={20}
+                  height={20}
+                  className="dark:invert"
+                />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleOAuthSignUp("oauth_apple")}
+                className="font-sans"
+              >
+                <Image
+                  src="/apple.svg"
+                  alt="Apple logo"
+                  width={20}
+                  height={20}
+                  className="dark:invert"
+                />
+              </Button>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground font-sans">
+                Or
+              </span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm rounded-lg p-3 text-center font-sans">
                 {error}
               </div>
             )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="first-name"
+                  className="font-sans text-muted-foreground"
+                >
+                  First Name
+                </Label>
+                <Input
+                  id="first-name"
+                  name="first-name"
+                  type="text"
+                  autoComplete="given-name"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="font-sans"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="last-name"
+                  className="font-sans text-muted-foreground"
+                >
+                  Last Name
+                </Label>
+                <Input
+                  id="last-name"
+                  name="last-name"
+                  type="text"
+                  autoComplete="family-name"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="font-sans"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="font-sans">
+              <Label
+                htmlFor="email"
+                className="font-sans text-muted-foreground"
+              >
                 Email address
               </Label>
               <Input
@@ -174,49 +297,51 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="font-sans">
+              <Label
+                htmlFor="password"
+                className="font-sans text-muted-foreground"
+              >
                 Password
               </Label>
               <Input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="font-sans"
-                minLength={8}
               />
-              <p className="text-xs text-muted-foreground font-sans pt-1">
-                Minimum 8 characters.
+              <p className="text-xs text-muted-foreground font-sans">
+                Minimum length is 8 characters.
               </p>
             </div>
             <Button
               type="submit"
-              className="w-full font-sans"
+              className="w-full font-sans bg-[#372F84] text-white hover:bg-[#372F84]/90 text-base py-6"
               disabled={isLoading}
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading ? "Creating Account..." : "Sign Up"}
             </Button>
           </form>
-        </CardContent>
-        <CardFooter className="flex-col gap-4">
           <p className="text-center text-sm text-muted-foreground font-sans">
+            By creating an account, you agree to the{" "}
+            <Link href="/terms" className="underline hover:text-[#372F84]">
+              Terms of Service
+            </Link>
+            .
+          </p>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground font-sans">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-primary hover:underline font-medium"
+              className="font-semibold text-[#000000] dark:text-[#ffffff] hover:underline"
             >
-              Sign In
+              Login
             </Link>
           </p>
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors font-sans"
-          >
-            &larr; Return to Home
-          </Link>
         </CardFooter>
       </Card>
     </AuthLayout>

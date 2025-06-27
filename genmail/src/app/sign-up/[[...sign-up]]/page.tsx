@@ -7,9 +7,7 @@ export default function Page() {
     <AuthLayout>
       <div className="flex flex-col items-center text-center">
         <div id="clerk-captcha" className="mb-4"></div>
-        <div className="transform scale-90">
-          <SignUp />
-        </div>
+        <SignUp />
         <Link
           href="/"
           className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"

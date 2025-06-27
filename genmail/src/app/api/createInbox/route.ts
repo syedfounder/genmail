@@ -14,19 +14,40 @@ function validateSupabaseUrl(url: string): string {
   }
 
   // Remove any potential "value: " or "Value: " prefix that might be causing issues
-  const cleanUrl = url.replace(/^value:\s*/i, "").trim();
+  // Also remove any quotes, extra whitespace, and other potential formatting issues
+  const cleanUrl = url
+    .replace(/^value:\s*/i, "")
+    .replace(/^["']|["']$/g, "") // Remove quotes
+    .replace(/\s+/g, "") // Remove all whitespace
+    .trim();
+
+  if (!cleanUrl) {
+    throw new Error("Supabase URL is empty after cleaning");
+  }
 
   // Ensure it starts with https://
   if (!cleanUrl.startsWith("https://")) {
-    throw new Error(`Invalid Supabase URL format: ${cleanUrl}`);
+    throw new Error(
+      `Invalid Supabase URL format - must start with https://: ${cleanUrl}`
+    );
   }
 
-  // Validate it's a proper URL
+  // Validate it's a proper URL with better error handling
   try {
-    new URL(cleanUrl);
+    const urlObj = new URL(cleanUrl);
+    // Additional validation for Supabase URLs
+    if (!urlObj.hostname.includes("supabase")) {
+      console.warn(
+        `Warning: URL doesn't appear to be a Supabase URL: ${cleanUrl}`
+      );
+    }
     return cleanUrl;
-  } catch {
-    throw new Error(`Invalid Supabase URL: ${cleanUrl}`);
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(
+      `Invalid Supabase URL - failed to parse: ${cleanUrl}. Error: ${errorMessage}`
+    );
   }
 }
 
@@ -137,7 +158,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate email and expiration
-    const randomId = Math.random().toString(36).substring(2, 8);
+    // Create a valid email ID that matches the database regex constraint
+    // Pattern: ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$
+    const generateValidEmailId = () => {
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let result = "";
+      // Start with a letter to ensure it's always valid
+      result += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)];
+      // Add 5-7 more characters
+      for (let i = 0; i < 6; i++) {
+        result += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return result;
+    };
+
+    const randomId = generateValidEmailId();
     const emailAddress = `${randomId}@gminbox.com`;
 
     let expiresAt: Date;
@@ -211,12 +246,37 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error(
         "[API /api/createInbox] Supabase insert error:",
-        error.message
+        error.message,
+        "Error code:",
+        error.code,
+        "Details:",
+        error.details
       );
+
+      // Provide more specific error messages for common validation issues
+      let userFriendlyMessage = "Failed to create inbox in database.";
+      if (
+        error.message.includes("valid_email_format") ||
+        error.message.includes("string did not match")
+      ) {
+        userFriendlyMessage =
+          "Generated email address format is invalid. Please try again.";
+      } else if (
+        error.message.includes("duplicate") ||
+        error.message.includes("unique")
+      ) {
+        userFriendlyMessage = "Email address already exists. Please try again.";
+      }
+
       return NextResponse.json(
         {
-          error: "Failed to create inbox in database.",
+          error: userFriendlyMessage,
           details: error.message,
+          debug: {
+            code: error.code,
+            details: error.details,
+            emailAddress: inboxToInsert.email_address,
+          },
         },
         { status: 500 }
       );
