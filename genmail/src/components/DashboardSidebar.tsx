@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "@/lib/supabaseClient";
 import {
   Inbox,
   FilePlus,
@@ -40,10 +40,7 @@ const DashboardSidebar = ({
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the validated Supabase client
 
   useEffect(() => {
     setMounted(true);
