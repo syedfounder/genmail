@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = "force-dynamic";
+
 export async function DELETE(request: Request) {
   console.log("--- [API /api/deleteInbox] Starting deletion ---");
 

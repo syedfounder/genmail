@@ -109,20 +109,25 @@ export default function DashboardPage() {
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
-
-  const [supabase] = useState(() =>
-    createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
+  const [supabase, setSupabase] = useState<any>(null);
 
   useEffect(() => {
-    if (user) {
+    // Initialize Supabase client only on the client side
+    if (typeof window !== "undefined") {
+      const client = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      setSupabase(client);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && supabase) {
       setLoading(true);
       fetchInboxes(user.id, supabase).finally(() => setLoading(false));
     }
-  }, [user, fetchInboxes]);
+  }, [user, supabase, fetchInboxes]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -274,7 +279,7 @@ export default function DashboardPage() {
             variant="outline"
             size="icon"
             onClick={() => {
-              if (user) {
+              if (user && supabase) {
                 setLoading(true);
                 fetchInboxes(user.id, supabase).finally(() =>
                   setLoading(false)

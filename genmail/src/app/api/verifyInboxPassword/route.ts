@@ -4,6 +4,9 @@ import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { getClientIP } from "@/lib/utils";
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   console.log("--- [API /api/verifyInboxPassword] Starting verification ---");
 

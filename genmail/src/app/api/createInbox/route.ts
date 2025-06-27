@@ -4,6 +4,9 @@ import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import bcrypt from "bcryptjs";
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = "force-dynamic";
+
 // Helper function to validate and clean URL
 function validateSupabaseUrl(url: string): string {
   if (!url) {

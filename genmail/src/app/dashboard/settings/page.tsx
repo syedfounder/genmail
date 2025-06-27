@@ -38,16 +38,18 @@ export default function SettingsPage() {
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-
-  const [supabase] = useState(() =>
-    createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
+  const [supabase, setSupabase] = useState<any>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Initialize Supabase client only on the client side
+    if (typeof window !== "undefined") {
+      const client = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      setSupabase(client);
+    }
   }, []);
 
   const handleSaveSettings = async () => {

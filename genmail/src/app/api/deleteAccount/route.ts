@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   console.log("--- [API /api/deleteAccount] Received request ---");
 
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       console.warn("[API /api/deleteAccount] Unauthorized request: No userId");
@@ -40,4 +43,3 @@ export async function POST() {
     );
   }
 }
- 

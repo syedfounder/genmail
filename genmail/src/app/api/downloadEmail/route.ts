@@ -3,6 +3,9 @@ import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = "force-dynamic";
+
 // Sanitize filename to prevent path traversal and other attacks
 function sanitizeFilename(subject: string, format: "eml" | "txt"): string {
   // Replace potentially problematic characters with an underscore
