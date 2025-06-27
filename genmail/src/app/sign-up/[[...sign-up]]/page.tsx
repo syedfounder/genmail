@@ -6,6 +6,7 @@ export default function Page() {
   return (
     <AuthLayout>
       <div className="flex flex-col items-center text-center">
+        <div id="clerk-captcha" className="mb-4"></div>
         <div className="transform scale-90">
           <SignUp />
         </div>

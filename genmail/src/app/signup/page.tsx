@@ -18,29 +18,126 @@ import AuthLayout from "@/components/AuthLayout";
 import Link from "next/link";
 
 export default function SignupPage() {
-  const { isLoaded, signUp } = useSignUp();
+  const { isLoaded, signUp, setActive } = useSignUp();
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState("");
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoaded) return;
     setError("");
+    setIsLoading(true);
 
     try {
       await signUp.create({
         emailAddress,
         password,
       });
-      router.push("/dashboard");
+
+      // Send email verification
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setPendingVerification(true);
+      setError("");
     } catch (err: any) {
+      console.error("Signup error:", err);
       setError(
-        err.errors[0]?.longMessage || "An error occurred during sign up."
+        err.errors?.[0]?.longMessage || "An error occurred during sign up."
       );
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded) return;
+    setIsLoading(true);
+
+    try {
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code: verificationCode,
+      });
+
+      if (completeSignUp.status === "complete") {
+        await setActive({ session: completeSignUp.createdSessionId });
+        router.push("/dashboard");
+      } else {
+        console.error("Verification incomplete:", completeSignUp);
+        setError("Verification failed. Please try again.");
+      }
+    } catch (err: any) {
+      console.error("Verification error:", err);
+      setError(
+        err.errors?.[0]?.longMessage || "Verification failed. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (pendingVerification) {
+    return (
+      <AuthLayout>
+        <Card className="mx-auto max-w-md bg-card/80 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-sans">Verify Email</CardTitle>
+            <CardDescription className="font-sans">
+              Enter the verification code sent to {emailAddress}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleVerification} className="space-y-4">
+              {error && (
+                <div className="bg-destructive/10 text-destructive text-sm rounded-lg p-3 text-center font-sans">
+                  {error}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="code" className="font-sans">
+                  Verification Code
+                </Label>
+                <Input
+                  id="code"
+                  name="code"
+                  type="text"
+                  required
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  className="font-sans"
+                  placeholder="Enter 6-digit code"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full font-sans"
+                disabled={isLoading}
+              >
+                {isLoading ? "Verifying..." : "Verify Email"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex-col gap-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPendingVerification(false);
+                setError("");
+                setVerificationCode("");
+              }}
+              className="text-sm font-sans"
+            >
+              Back to Sign Up
+            </Button>
+          </CardFooter>
+        </Card>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>
@@ -95,8 +192,12 @@ export default function SignupPage() {
                 Minimum 8 characters.
               </p>
             </div>
-            <Button type="submit" className="w-full font-sans">
-              Create Account
+            <Button
+              type="submit"
+              className="w-full font-sans"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
         </CardContent>

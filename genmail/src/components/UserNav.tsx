@@ -45,7 +45,7 @@ export function UserNav() {
           className="relative h-8 w-8 rounded-full hover:bg-secondary/80"
         >
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary/20 text-primary hover:bg-primary/30 font-semibold">
+            <AvatarFallback className="bg-primary/20 text-primary hover:bg-primary/30 font-semibold font-sans">
               {initials ? initials : <User className="h-4 w-4" />}
             </AvatarFallback>
           </Avatar>

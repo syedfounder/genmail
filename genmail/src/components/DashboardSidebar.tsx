@@ -24,11 +24,13 @@ import { usePathname } from "next/navigation";
 interface DashboardSidebarProps {
   isCollapsed: boolean;
   setIsCollapsed: (isCollapsed: boolean) => void;
+  isMobile?: boolean;
 }
 
 const DashboardSidebar = ({
   isCollapsed,
   setIsCollapsed,
+  isMobile = false,
 }: DashboardSidebarProps) => {
   const { user } = useUser();
   const { inboxes, fetchInboxes, addInbox } = useInboxStore();
@@ -91,20 +93,25 @@ const DashboardSidebar = ({
   // Calculate total inbox count (including expired ones for the limit)
   const totalInboxCount = inboxes.length;
   const maxInboxes = 10; // Premium subscription limit
+  const resolvedCollapsed = isMobile ? false : isCollapsed;
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-full bg-background border-r border-border/60 p-4 flex flex-col justify-between font-sans transition-all duration-300 ${
-        isCollapsed ? "w-20" : "w-72"
-      }`}
+      className={
+        isMobile
+          ? "flex h-full flex-col justify-between p-4 font-sans"
+          : `fixed top-0 left-0 h-full bg-background border-r border-border/60 p-4 flex flex-col justify-between font-sans transition-all duration-300 ${
+              resolvedCollapsed ? "w-20" : "w-72"
+            }`
+      }
     >
       <div>
         <div
           className={`flex items-center mb-4 ${
-            isCollapsed ? "justify-center" : "justify-between"
+            resolvedCollapsed ? "justify-center" : "justify-between"
           }`}
         >
-          {!isCollapsed && (
+          {!resolvedCollapsed && (
             <Link href="/" className="p-2">
               {mounted && (
                 <Image
@@ -117,31 +124,33 @@ const DashboardSidebar = ({
               )}
             </Link>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-            )}
-            <span className="sr-only">
-              {isCollapsed ? "Expand" : "Collapse"}
-            </span>
-          </Button>
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              )}
+              <span className="sr-only">
+                {isCollapsed ? "Expand" : "Collapse"}
+              </span>
+            </Button>
+          )}
         </div>
 
         {/* Search Bar */}
-        {isCollapsed ? (
+        {resolvedCollapsed ? (
           <div className="px-2 mb-6 flex justify-center">
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => setIsCollapsed(false)}
+              onClick={() => !isMobile && setIsCollapsed(false)}
             >
               <Search className="h-4 w-4 text-muted-foreground" />
               <span className="sr-only">Search</span>
@@ -163,7 +172,7 @@ const DashboardSidebar = ({
           </div>
         )}
 
-        {!isCollapsed && (
+        {!resolvedCollapsed && (
           <div className="flex items-center justify-between px-2 mb-2">
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Active Inboxes
@@ -183,30 +192,30 @@ const DashboardSidebar = ({
             activeInboxes.map((inbox) => {
               const isActive = pathname === `/dashboard/inbox/${inbox.id}`;
               return (
-              <Link
-                key={inbox.id}
-                href={`/dashboard/inbox/${inbox.id}`}
-                className={`text-sm p-2 rounded-md hover:bg-secondary transition-colors flex items-center gap-3 ${
-                  isCollapsed ? "justify-center" : ""
+                <Link
+                  key={inbox.id}
+                  href={`/dashboard/inbox/${inbox.id}`}
+                  className={`text-sm p-2 rounded-md hover:bg-secondary transition-colors flex items-center gap-3 ${
+                    resolvedCollapsed ? "justify-center" : ""
                   } ${
                     isActive
                       ? "bg-gradient-to-r from-[#372F84]/20 to-background text-foreground"
                       : ""
-                }`}
-              >
+                  }`}
+                >
                   <Inbox
                     className={`w-4 h-4 flex-shrink-0 ${
                       isActive ? "text-[#372F84]" : "text-muted-foreground"
                     }`}
                   />
-                {!isCollapsed && (
-                  <span className="truncate">{inbox.email_address}</span>
-                )}
-              </Link>
+                  {!resolvedCollapsed && (
+                    <span className="truncate">{inbox.email_address}</span>
+                  )}
+                </Link>
               );
             })
           ) : (
-            !isCollapsed && (
+            !resolvedCollapsed && (
               <p className="text-sm text-muted-foreground p-2">
                 No active inboxes found.
               </p>
@@ -219,20 +228,20 @@ const DashboardSidebar = ({
         <Link
           href="/dashboard/settings"
           className={`text-sm p-2 rounded-md hover:bg-secondary transition-colors flex items-center gap-3 ${
-            isCollapsed ? "justify-center" : ""
+            resolvedCollapsed ? "justify-center" : ""
           }`}
         >
           <Settings className="w-4 h-4 text-muted-foreground" />
-          {!isCollapsed && "Settings"}
+          {!resolvedCollapsed && "Settings"}
         </Link>
         <Link
           href="/help"
           className={`text-sm p-2 rounded-md hover:bg-secondary transition-colors flex items-center gap-3 ${
-            isCollapsed ? "justify-center" : ""
+            resolvedCollapsed ? "justify-center" : ""
           }`}
         >
           <LifeBuoy className="w-4 h-4 text-muted-foreground" />
-          {!isCollapsed && "Help & Support"}
+          {!resolvedCollapsed && "Help & Support"}
         </Link>
       </div>
     </aside>
