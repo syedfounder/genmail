@@ -164,6 +164,10 @@ export default function InboxViewer({
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
+  // Mobile-specific state
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [isMobileEmailView, setIsMobileEmailView] = useState(false);
+
   // Calculate time remaining
   const getTimeRemaining = useCallback(() => {
     const now = new Date().getTime();
@@ -347,7 +351,17 @@ export default function InboxViewer({
     refreshEmails();
   };
 
-  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  // Mobile email selection handler
+  const handleMobileEmailSelect = (email: Email) => {
+    setSelectedEmail(email);
+    setIsMobileEmailView(true);
+  };
+
+  // Mobile back to inbox handler
+  const handleMobileBackToInbox = () => {
+    setIsMobileEmailView(false);
+    setSelectedEmail(null);
+  };
 
   const renderEmailContent = (content: string) => {
     // A simple approach to render basic HTML.
@@ -387,22 +401,25 @@ export default function InboxViewer({
       <div className="bg-secondary/50 border border-border rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-border bg-background/50">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Desktop Header - Unchanged */}
+          <div className="hidden sm:flex flex-wrap items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-foreground">
+              <h2 className="text-lg font-semibold text-foreground font-sans">
                 Your Temporary Inbox
               </h2>
-              <p className="text-sm text-muted-foreground mt-1 truncate">
-                <span className="font-semibold text-foreground/80">
+              <p className="text-sm text-muted-foreground mt-1 truncate font-sans">
+                <span className="font-normal text-foreground/80">
                   {emailAddress}
                 </span>
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Expires in:</p>
+                <p className="text-sm text-muted-foreground font-sans">
+                  Expires in:
+                </p>
                 <p
-                  className={`text-lg font-medium ${
+                  className={`text-lg font-medium font-sans ${
                     timeRemaining.expired ||
                     (timeRemaining.minutes === 0 && timeRemaining.seconds <= 59)
                       ? "text-red-500"
@@ -422,6 +439,52 @@ export default function InboxViewer({
                 variant="outline"
                 size="sm"
                 disabled={isLoading}
+                className="font-sans"
+              >
+                {isLoading ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Header - Stacked Layout */}
+          <div className="sm:hidden space-y-3">
+            <div className="text-center">
+              <h2 className="text-lg font-semibold text-foreground font-sans">
+                Your Temporary Inbox
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 font-sans break-all">
+                <span className="font-normal text-foreground/80 tracking-tight">
+                  {emailAddress}
+                </span>
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-sm text-muted-foreground font-sans">
+                  Expires in:
+                </p>
+                <p
+                  className={`text-lg font-medium font-sans ${
+                    timeRemaining.expired ||
+                    (timeRemaining.minutes === 0 && timeRemaining.seconds <= 59)
+                      ? "text-red-500"
+                      : "text-green-500"
+                  }`}
+                >
+                  {timeRemaining.expired
+                    ? "Expired"
+                    : `${String(timeRemaining.minutes).padStart(
+                        2,
+                        "0"
+                      )}:${String(timeRemaining.seconds).padStart(2, "0")}`}
+                </p>
+              </div>
+              <Button
+                onClick={handleManualRefresh}
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                className="font-sans"
               >
                 {isLoading ? "Refreshing..." : "Refresh"}
               </Button>
@@ -429,21 +492,21 @@ export default function InboxViewer({
           </div>
         </div>
 
-        {/* Body */}
-        <div className="flex h-[60vh]">
+        {/* Desktop View - Unchanged */}
+        <div className="hidden md:flex h-[60vh]">
           {/* Email List */}
           <div className="w-1/3 border-r border-border overflow-y-auto bg-background/20">
             {isLoading && emails.length === 0 && (
-              <p className="p-4 text-center text-muted-foreground">
+              <p className="p-4 text-center text-muted-foreground font-sans">
                 Loading emails...
               </p>
             )}
             {!isLoading && emails.length === 0 && (
-              <div className="p-6 text-center">
-                <h3 className="font-semibold text-foreground">
+              <div className="p-6 text-center flex flex-col items-center justify-center h-full">
+                <h3 className="font-semibold text-foreground font-sans">
                   Waiting for emails...
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-1 font-sans">
                   Emails sent to your address will appear here.
                 </p>
               </div>
@@ -460,14 +523,14 @@ export default function InboxViewer({
                   }`}
                 >
                   <div className="flex justify-between items-baseline">
-                    <p className="font-semibold text-sm truncate text-foreground">
+                    <p className="font-semibold text-sm truncate text-foreground font-sans">
                       {email.from_address}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-sans">
                       {new Date(email.received_at).toLocaleTimeString()}
                     </p>
                   </div>
-                  <p className="text-sm text-muted-foreground truncate mt-1">
+                  <p className="text-sm text-muted-foreground truncate mt-1 font-sans">
                     {email.subject}
                   </p>
                 </li>
@@ -480,22 +543,22 @@ export default function InboxViewer({
             {selectedEmail ? (
               <div>
                 <div className="border-b border-border pb-4">
-                  <h3 className="text-xl font-semibold text-foreground">
+                  <h3 className="text-xl font-semibold text-foreground font-sans">
                     {selectedEmail.subject}
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-sm text-muted-foreground mt-2 font-sans">
                     From:{" "}
                     <span className="font-medium text-foreground/80">
                       {selectedEmail.from_address}
                     </span>
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1 font-sans">
                     Received:{" "}
                     {new Date(selectedEmail.received_at).toLocaleString()}
                   </p>
                 </div>
                 <div
-                  className="prose prose-sm dark:prose-invert max-w-none mt-6"
+                  className="prose prose-sm dark:prose-invert max-w-none mt-6 font-sans"
                   dangerouslySetInnerHTML={renderEmailContent(
                     selectedEmail.body
                   )}
@@ -504,7 +567,7 @@ export default function InboxViewer({
                 {selectedEmail.attachments &&
                   selectedEmail.attachments.length > 0 && (
                     <div className="mt-8">
-                      <h4 className="font-semibold text-foreground mb-3">
+                      <h4 className="font-semibold text-foreground mb-3 font-sans">
                         Attachments ({selectedEmail.attachments.length})
                       </h4>
                       <ul className="space-y-3">
@@ -524,10 +587,10 @@ export default function InboxViewer({
                                   {getFileIcon(att.content_type, att.filename)}
                                 </span>
                                 <div className="flex-1">
-                                  <p className="text-sm font-medium text-foreground">
+                                  <p className="text-sm font-medium text-foreground font-sans">
                                     {att.filename}
                                   </p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-xs text-muted-foreground font-sans">
                                     {formatFileSize(att.file_size)}
                                   </p>
                                 </div>
@@ -537,13 +600,13 @@ export default function InboxViewer({
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     download
-                                    className="text-sm text-blue-500 hover:text-blue-600 font-medium"
+                                    className="text-sm text-blue-500 hover:text-blue-600 font-medium font-sans"
                                   >
                                     Download
                                   </a>
                                 ) : (
                                   <span
-                                    className="text-sm text-red-500 cursor-not-allowed"
+                                    className="text-sm text-red-500 cursor-not-allowed font-sans"
                                     title={check.reason}
                                   >
                                     Blocked
@@ -572,11 +635,155 @@ export default function InboxViewer({
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   ></path>
                 </svg>
-                <p className="font-medium">Select an email to read</p>
-                <p className="text-sm">Nothing selected</p>
+                <p className="font-medium font-sans">Select an email to read</p>
+                <p className="text-sm font-sans">Nothing selected</p>
               </div>
             )}
           </div>
+        </div>
+
+        {/* Mobile View - Page System */}
+        <div className="md:hidden h-[60vh]">
+          {!isMobileEmailView ? (
+            // Mobile Email List Page
+            <div className="h-full overflow-y-auto">
+              {isLoading && emails.length === 0 && (
+                <p className="p-4 text-center text-muted-foreground font-sans">
+                  Loading emails...
+                </p>
+              )}
+              {!isLoading && emails.length === 0 && (
+                <div className="p-6 text-center flex flex-col items-center justify-center h-full">
+                  <h3 className="font-semibold text-foreground font-sans">
+                    Waiting for emails...
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1 font-sans">
+                    Emails sent to your address will appear here.
+                  </p>
+                </div>
+              )}
+              <ul className="divide-y divide-border">
+                {emails.map((email) => (
+                  <li
+                    key={email.id}
+                    onClick={() => handleMobileEmailSelect(email)}
+                    className="p-4 cursor-pointer hover:bg-muted transition-colors"
+                  >
+                    <div className="flex justify-between items-baseline mb-1">
+                      <p className="font-semibold text-sm text-foreground font-sans truncate">
+                        {email.from_address}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-sans ml-2">
+                        {new Date(email.received_at).toLocaleTimeString()}
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground font-sans truncate">
+                      {email.subject}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            // Mobile Email View Page
+            <div className="h-full flex flex-col">
+              <div className="p-4 border-b border-border bg-background/50">
+                <Button
+                  onClick={handleMobileBackToInbox}
+                  variant="outline"
+                  size="sm"
+                  className="mb-3 font-sans"
+                >
+                  ← Back to Inbox
+                </Button>
+                {selectedEmail && (
+                  <>
+                    <h3 className="text-lg font-semibold text-foreground font-sans">
+                      {selectedEmail.subject}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1 font-sans">
+                      From: {selectedEmail.from_address}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 font-sans">
+                      Received:{" "}
+                      {new Date(selectedEmail.received_at).toLocaleString()}
+                    </p>
+                  </>
+                )}
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                {selectedEmail && (
+                  <>
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none font-sans"
+                      dangerouslySetInnerHTML={renderEmailContent(
+                        selectedEmail.body
+                      )}
+                    />
+                    {/* Mobile Attachment Section */}
+                    {selectedEmail.attachments &&
+                      selectedEmail.attachments.length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="font-semibold text-foreground mb-3 font-sans">
+                            Attachments ({selectedEmail.attachments.length})
+                          </h4>
+                          <ul className="space-y-3">
+                            {selectedEmail.attachments.map((att) => {
+                              const check = isAttachmentAllowed(
+                                att.content_type,
+                                att.filename,
+                                att.file_size
+                              );
+                              return (
+                                <li
+                                  key={att.id}
+                                  className="border border-border rounded-lg p-3"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xl">
+                                      {getFileIcon(
+                                        att.content_type,
+                                        att.filename
+                                      )}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-foreground font-sans truncate">
+                                        {att.filename}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground font-sans">
+                                        {formatFileSize(att.file_size)}
+                                      </p>
+                                    </div>
+                                    {check.allowed ? (
+                                      <a
+                                        href={att.download_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download
+                                        className="text-sm text-blue-500 hover:text-blue-600 font-medium font-sans"
+                                      >
+                                        Download
+                                      </a>
+                                    ) : (
+                                      <span
+                                        className="text-sm text-red-500 cursor-not-allowed font-sans"
+                                        title={check.reason}
+                                      >
+                                        Blocked
+                                      </span>
+                                    )}
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

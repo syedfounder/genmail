@@ -37,3 +37,6 @@ next-env.d.ts
 
 # Cursor Configuration (contains sensitive MCP connection strings)
 .cursor/
+
+# clerk configuration (can include secrets)
+/.clerk/

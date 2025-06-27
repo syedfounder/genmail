@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
+import { Accordion, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function HelpCenter() {
   const { theme } = useTheme();
@@ -402,80 +403,63 @@ export default function HelpCenter() {
       `,
       tags: ["attachments", "files", "security", "limits"],
     },
+    {
+      id: 11,
+      category: "getting-started",
+      title: "Referral Program and Affiliate Partnership",
+      description:
+        "Learn how to participate in our referral program and become an affiliate partner.",
+      content: `
+        <h3>Referral Program</h3>
+        <p>Earn rewards for referring friends and family to genmail.</p>
+        
+        <h3>Affiliate Partnership</h3>
+        <p>Join our affiliate program to earn commissions by promoting genmail.</p>
+      `,
+      tags: ["referral", "affiliate", "partnership"],
+    },
   ];
 
-  const filteredArticles = helpArticles.filter((article) => {
-    const matchesCategory =
-      activeCategory === "all" || article.category === activeCategory;
-    const matchesSearch =
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    return matchesCategory && matchesSearch;
-  });
+  const filteredArticles =
+    activeCategory === "all"
+      ? helpArticles.filter((article) =>
+          article.title.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : helpArticles.filter(
+          (article) =>
+            article.category === activeCategory &&
+            article.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <div className="min-h-screen bg-background text-foreground">
-        {/* Navigation */}
-        <nav className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center">
-                {mounted && (
-                  <Image
-                    src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
-                    alt="Genmail Logo"
-                    width={64}
-                    height={22}
-                  />
-                )}
-              </Link>
-              <div className="flex items-center gap-6">
-                <Link
-                  href="/"
-                  className="font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Back to Home
-                </Link>
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </nav>
-
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <div className="min-h-screen bg-background font-sans text-foreground">
         {/* Main Content */}
-        <main className="font-sans max-w-6xl mx-auto px-6 py-16">
-          <div className="space-y-12">
-            {/* Header */}
-            <div className="text-center">
-              <h1 className="font-serif text-5xl font-bold tracking-tighter mb-6">
+        <main className="max-w-6xl mx-auto px-6 py-12 pt-24">
+          {/* Page Header */}
+          <div className="text-center mb-16">
+            <h1 className="text-5xl font-bold tracking-tighter mb-4 font-serif">
                 Help Center
               </h1>
-              <p className="font-sans text-lg text-muted-foreground mb-8">
-                Everything you need to know about using{" "}
-                <span className="font-serif font-semibold">genmail</span>{" "}
-                effectively
-              </p>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Find answers to your questions about{" "}
+              <span className="font-serif">genmail</span>, privacy, and more.
+            </p>
+          </div>
 
-              {/* Search Bar */}
-              <div className="max-w-md mx-auto relative">
+          {/* Search and Filter Section */}
+          <div className="sticky top-[76px] bg-background/80 backdrop-blur-sm z-40 py-6 mb-8">
+            <div className="relative mb-6">
                 <input
                   type="text"
-                  placeholder="Search help articles..."
+                placeholder="Search articles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="font-sans w-full px-4 py-3 pl-12 border border-border/50 rounded-lg bg-background/50 focus:border-[#372F84] focus:outline-none focus:ring-2 focus:ring-[#372F84]/20 transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <svg
-                  className="w-5 h-5 text-muted-foreground absolute left-4 top-1/2 transform -translate-y-1/2"
+                  className="w-5 h-5 text-muted-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -490,204 +474,385 @@ export default function HelpCenter() {
               </div>
             </div>
 
-            {/* Quick Access Cards */}
-            <section className="grid md:grid-cols-3 gap-6">
-              <Link
-                href="#getting-started"
-                onClick={() => setActiveCategory("getting-started")}
-                className="group"
-              >
-                <div className="bg-background border border-border/50 rounded-xl p-6 text-center hover:shadow-lg transition-all">
-                  <div className="w-12 h-12 bg-foreground/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-6 h-6 text-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.5"
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    activeCategory === category.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  {category.icon}
+                  {category.name}
+                </button>
+              ))}
                   </div>
-                  <h3 className="font-sans font-semibold text-lg mb-2 text-foreground">
-                    Getting Started
-                  </h3>
-                  <p className="font-sans text-sm text-muted-foreground">
-                    New to genmail? Start here for the basics
+                </div>
+
+          <div className="grid md:grid-cols-12 gap-12">
+            {/* Quick Access Links (Left Sidebar) */}
+            <aside className="md:col-span-3">
+              <div className="sticky top-60">
+                <h3 className="text-lg font-semibold mb-6">Quick Access</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
+                  {[
+                    { title: "Getting Started", count: 3 },
+                    { title: "Features", count: 4 },
+                    { title: "Privacy", count: 2 },
+                    { title: "Troubleshooting", count: 2 },
+                    { title: "Technical", count: 2 },
+                  ].map((item) => (
+                    <div
+                      key={item.title}
+                      className="h-full bg-secondary/50 border border-border rounded-xl p-4 hover:bg-secondary/70 transition-colors flex flex-col justify-between"
+                    >
+                      <div>
+                        <h4 className="font-semibold mb-1">{item.title}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {item.count} articles
                   </p>
                 </div>
-              </Link>
-
-              <Link
-                href="#troubleshooting"
-                onClick={() => setActiveCategory("troubleshooting")}
-                className="group"
-              >
-                <div className="bg-background border border-border/50 rounded-xl p-6 text-center hover:shadow-lg transition-all">
-                  <div className="w-12 h-12 bg-foreground/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-6 h-6 text-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.5"
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.5"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
+                      <a
+                        href={`#${item.title.toLowerCase().replace(" ", "-")}`}
+                        className="text-sm font-medium text-primary mt-3 block"
+                      >
+                        View →
+                      </a>
                   </div>
-                  <h3 className="font-sans font-semibold text-lg mb-2 text-foreground">
-                    Troubleshooting
-                  </h3>
-                  <p className="font-sans text-sm text-muted-foreground">
-                    Having issues? Find solutions here
-                  </p>
+                  ))}
                 </div>
-              </Link>
+              </div>
+            </aside>
 
-              <Link
-                href="#privacy"
-                onClick={() => setActiveCategory("privacy")}
-                className="group"
-              >
-                <div className="bg-background border border-border/50 rounded-xl p-6 text-center hover:shadow-lg transition-all">
-                  <div className="w-12 h-12 bg-foreground/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-6 h-6 text-foreground"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.5"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="font-sans font-semibold text-lg mb-2 text-foreground">
-                    Privacy & Security
-                  </h3>
-                  <p className="font-sans text-sm text-muted-foreground">
-                    Learn how we protect your data
-                  </p>
-                </div>
-              </Link>
-            </section>
-
-            {/* Category Filter */}
-            <section>
-              <div className="flex flex-wrap gap-3 justify-center">
-                {categories.map((category) => (
-                  <button
+            {/* Articles (Right Section) */}
+            <div className="md:col-span-9">
+              {filteredArticles.length > 0 ? (
+                <div className="space-y-12">
+                  {categories
+                    .filter(
+                      (c) =>
+                        c.id !== "all" &&
+                        (activeCategory === "all" || activeCategory === c.id)
+                    )
+                    .map((category) => (
+                      <section
                     key={category.id}
-                    onClick={() => setActiveCategory(category.id)}
-                    className={`font-sans px-4 py-2 rounded-lg transition-colors text-sm inline-flex items-center gap-2 ${
-                      activeCategory === category.id
-                        ? "bg-[#372F84] text-white"
-                        : "bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
+                        id={category.id}
+                        className="scroll-mt-24"
+                      >
+                        <h2 className="text-3xl font-semibold mb-8 flex items-center gap-3 font-serif">
                     {category.icon}
                     {category.name}
-                  </button>
+                        </h2>
+                        <div className="space-y-4">
+                          {filteredArticles
+                            .filter((a) => a.category === category.id)
+                            .map((article) => (
+                              <HelpArticle key={article.id} article={article} />
                 ))}
               </div>
             </section>
-
-            {/* Help Articles */}
-            <section>
-              <div className="grid gap-6">
-                {filteredArticles.map((article) => (
-                  <HelpArticle key={article.id} article={article} />
-                ))}
-
-                {filteredArticles.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🔍</div>
-                    <h3 className="font-sans text-xl font-semibold mb-2">
-                      No articles found
+                    ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 border-2 border-dashed border-border rounded-lg">
+                  <h3 className="text-xl font-semibold mb-2">
+                    No Articles Found
                     </h3>
-                    <p className="font-sans text-muted-foreground">
-                      Try adjusting your search or browse all topics
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        setActiveCategory("all");
-                      }}
-                      className="font-sans mt-4 px-4 py-2 bg-[#372F84] text-white rounded-lg hover:bg-[#372F84]/90 transition-colors"
-                    >
-                      Show All Articles
-                    </button>
+                  <p className="text-muted-foreground">
+                    Try adjusting your search or filter.
+                  </p>
                   </div>
                 )}
               </div>
-            </section>
-
-            {/* Contact Support */}
-            <section className="bg-gradient-to-r from-[#372F84]/5 to-transparent border border-[#372F84]/20 rounded-2xl p-8 text-center">
-              <h2 className="font-sans text-2xl font-semibold mb-4">
-                Still Need Help?
-              </h2>
-              <p className="font-sans text-muted-foreground mb-6">
-                Can&apos;t find what you&apos;re looking for? Our support team
-                is here to help.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/contact"
-                  className="font-sans bg-foreground hover:bg-foreground/90 text-background px-6 py-3 rounded-lg transition-colors font-medium"
-                >
-                  Contact Support
-                </Link>
-                <a
-                  href="mailto:support@genmail.app"
-                  className="font-sans border border-foreground text-foreground hover:bg-foreground/5 px-6 py-3 rounded-lg transition-colors font-medium"
-                >
-                  Email Us Directly
-                </a>
-              </div>
-            </section>
-
-            {/* Back to Home */}
-            <div className="text-center pt-12">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-[#372F84] hover:bg-[#372F84]/90 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-                Back to <span className="font-serif">genmail</span>
-              </Link>
-            </div>
           </div>
         </main>
+        {/* Footer */}
+        <footer className="bg-background border-t border-border/30 py-16 px-6 font-sans relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8 mb-12">
+              {/* Brand Column */}
+              <div className="md:col-span-1">
+                <div className="flex items-center mb-4">
+                  {mounted && (
+                    <Image
+                      src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
+                      alt="Genmail Logo"
+                      width={64}
+                      height={22}
+                    />
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  Private, temporary email addresses that self-destruct. Protect
+                  your privacy online with zero data retention.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  <span>Service Online</span>
+                </div>
+              </div>
+
+              {/* Product Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Product
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/pricing"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#how-it-works"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      How it Works
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/api"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      API
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#pro-features"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pro Features
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Quick Access Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Quick Access
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/#hero"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Generate Email
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#tutorial"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Tutorial
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/pricing"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#technology"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Technology
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#use-cases"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Use Cases
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#faq"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      FAQs
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Support & Legal Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Support & Legal
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/help"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Help Center
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                  href="/contact"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Contact Us
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/privacy"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Privacy Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/terms"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Terms of Service
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/security"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Security
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Section */}
+            <div className="border-t border-border/20 pt-8">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                {/* Left: Copyright & Built with */}
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <p className="text-sm text-muted-foreground">
+                    © 2024 <span className="font-serif">genmail</span>. All
+                    rights reserved.
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Built with</span>
+                    <a
+                      href="https://lovable.dev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-foreground transition-colors"
+                    >
+                      <Image
+                        src="/lovable-logo-black.svg"
+                        alt="Lovable"
+                        width={60}
+                        height={10}
+                        className="dark:hidden"
+                      />
+                      <Image
+                        src="/lovable-logo-white.svg"
+                        alt="Lovable"
+                        width={60}
+                        height={10}
+                        className="hidden dark:block"
+                      />
+                    </a>
+                    <span>&</span>
+                    <a
+                      href="https://cursor.sh"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-foreground transition-colors"
+                    >
+                      <Image
+                        src="/cursor-logo.svg"
+                        alt="Cursor"
+                        width={46}
+                        height={9}
+                        className="dark:hidden"
+                      />
+                      <Image
+                        src="/cursor-logo-white.svg"
+                        alt="Cursor"
+                        width={46}
+                        height={9}
+                        className="hidden dark:block"
+                      />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right: Security badges */}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-green-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                >
+                  <path
+                        fillRule="evenodd"
+                        d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                  />
+                </svg>
+                    <span>GDPR Compliant</span>
+            </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-blue-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>TLS Encrypted</span>
+          </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-purple-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>Zero Logs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </ThemeProvider>
   );

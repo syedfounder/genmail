@@ -22,52 +22,27 @@ export default function PrivacyPolicy() {
       enableSystem
       disableTransitionOnChange
     >
-      <div className="min-h-screen bg-background text-foreground">
-        {/* Navigation */}
-        <nav className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center">
-                {mounted && (
-                  <Image
-                    src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
-                    alt="Genmail Logo"
-                    width={64}
-                    height={22}
-                  />
-                )}
-              </Link>
-              <div className="flex items-center gap-6">
-                <Link
-                  href="/"
-                  className="font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Back to Home
-                </Link>
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </nav>
+      <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+        {/* Gradients */}
+        {mounted && (
+          <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none bg-noise opacity-[0.05]"></div>
+        )}
+
+        {/* Header is now handled by layout.tsx */}
 
         {/* Main Content */}
-        <main className="font-sans max-w-4xl mx-auto px-6 py-16">
-          <div className="space-y-12">
-            {/* Header */}
-            <div className="text-center">
-              <h1 className="font-serif text-5xl font-bold tracking-tighter mb-6">
-                Privacy Policy
-              </h1>
-              <p className="font-sans text-lg text-muted-foreground mb-4">
-                How we protect your privacy when using temporary email services
-              </p>
-              <p className="font-sans text-sm text-muted-foreground">
-                Last updated: December 17, 2024
-              </p>
-            </div>
+        <main className="flex flex-col items-center flex-1 px-6 pt-10 pb-20 relative z-10">
+          <article className="prose prose-invert lg:prose-xl max-w-4xl w-full">
+            <h1>Privacy Policy</h1>
+            <p className="text-muted-foreground">
+              How we protect your privacy when using temporary email services
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Last updated: December 17, 2024
+            </p>
 
             {/* Introduction */}
-            <section className="bg-secondary/30 border border-border/50 rounded-2xl p-8">
+            <section className="bg-secondary/30 border border-border/50 rounded-2xl p-8 my-12">
               <h2 className="font-sans text-2xl font-semibold mb-4">
                 Our Commitment to Privacy
               </h2>
@@ -82,7 +57,7 @@ export default function PrivacyPolicy() {
             </section>
 
             {/* Information We Collect */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Information We Collect
               </h2>
@@ -137,7 +112,7 @@ export default function PrivacyPolicy() {
             </section>
 
             {/* How We Use Information */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 How We Use Your Information
               </h2>
@@ -194,7 +169,7 @@ export default function PrivacyPolicy() {
             </section>
 
             {/* Data Retention */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Data Retention & Deletion
               </h2>
@@ -237,7 +212,7 @@ export default function PrivacyPolicy() {
             </section>
 
             {/* Data Sharing */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Data Sharing & Third Parties
               </h2>
@@ -270,7 +245,7 @@ export default function PrivacyPolicy() {
             </section>
 
             {/* Security Measures */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Security Measures
               </h2>
@@ -346,7 +321,7 @@ export default function PrivacyPolicy() {
             </section>
 
             {/* Your Rights */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Your Privacy Rights
               </h2>
@@ -424,7 +399,7 @@ export default function PrivacyPolicy() {
             </section>
 
             {/* Contact Information */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Contact & Updates
               </h2>
@@ -492,8 +467,291 @@ export default function PrivacyPolicy() {
                 Back to <span className="font-serif">genmail</span>
               </Link>
             </div>
-          </div>
+          </article>
         </main>
+        {/* Footer */}
+        <footer className="bg-background border-t border-border/30 py-16 px-6 font-sans relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8 mb-12">
+              {/* Brand Column */}
+              <div className="md:col-span-1">
+                <div className="flex items-center mb-4">
+                  {mounted && (
+                    <Image
+                      src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
+                      alt="Genmail Logo"
+                      width={64}
+                      height={22}
+                    />
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  Private, temporary email addresses that self-destruct. Protect
+                  your privacy online with zero data retention.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  <span>Service Online</span>
+                </div>
+              </div>
+
+              {/* Product Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Product
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/pricing"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#how-it-works"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      How it Works
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/api"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      API
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#pro-features"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pro Features
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Quick Access Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Quick Access
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/#hero"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Generate Email
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#tutorial"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Tutorial
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/pricing"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#technology"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Technology
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#use-cases"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Use Cases
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#faq"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      FAQs
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Support & Legal Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Support & Legal
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/help"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Help Center
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/contact"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Contact Us
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/privacy"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Privacy Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/terms"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Terms of Service
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/security"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Security
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Section */}
+            <div className="border-t border-border/20 pt-8">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                {/* Left: Copyright & Built with */}
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <p className="text-sm text-muted-foreground">
+                    © 2024 <span className="font-serif">genmail</span>. All
+                    rights reserved.
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Built with</span>
+                    <a
+                      href="https://lovable.dev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-foreground transition-colors"
+                    >
+                      <Image
+                        src="/lovable-logo-black.svg"
+                        alt="Lovable"
+                        width={60}
+                        height={10}
+                        className="dark:hidden"
+                      />
+                      <Image
+                        src="/lovable-logo-white.svg"
+                        alt="Lovable"
+                        width={60}
+                        height={10}
+                        className="hidden dark:block"
+                      />
+                    </a>
+                    <span>&</span>
+                    <a
+                      href="https://cursor.sh"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-foreground transition-colors"
+                    >
+                      <Image
+                        src="/cursor-logo.svg"
+                        alt="Cursor"
+                        width={46}
+                        height={9}
+                        className="dark:hidden"
+                      />
+                      <Image
+                        src="/cursor-logo-white.svg"
+                        alt="Cursor"
+                        width={46}
+                        height={9}
+                        className="hidden dark:block"
+                      />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right: Security badges */}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-green-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>GDPR Compliant</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-blue-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>TLS Encrypted</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-purple-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>Zero Logs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </ThemeProvider>
   );

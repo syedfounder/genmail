@@ -165,13 +165,14 @@ CREATE INDEX idx_inbox_stats_inbox_date ON public.inbox_stats(inbox_id, date DES
 CREATE OR REPLACE FUNCTION cleanup_expired_inboxes()
 RETURNS INTEGER AS $$
 DECLARE
-    deleted_count INTEGER;
+    updated_count INTEGER;
 BEGIN
-    DELETE FROM public.inboxes 
+    UPDATE public.inboxes 
+    SET is_active = false
     WHERE expires_at < NOW() AND is_active = true;
     
-    GET DIAGNOSTICS deleted_count = ROW_COUNT;
-    RETURN deleted_count;
+    GET DIAGNOSTICS updated_count = ROW_COUNT;
+    RETURN updated_count;
 END;
 $$ LANGUAGE plpgsql;
 

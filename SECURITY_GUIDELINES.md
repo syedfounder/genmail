@@ -45,7 +45,7 @@ This document outlines security best practices and requirements for building Gen
 
 - **Email Webhook Data**:
 
-  - Validate inbound webhooks from Resend via HMAC signatures.
+  - Validate inbound webhooks from Mailgun via HMAC signatures.
   - Reject or log any malformed JSON.
 
 ## 4. Data Protection & Privacy
@@ -181,7 +181,7 @@ This document outlines security best practices and requirements for building Gen
 
 - **Inbound Email Validation**:
 
-  - Verify Resend webhook signatures; reject unverified requests.
+  - Verify Mailgun webhook signatures; reject unverified requests.
 
 - **Spam & Malware Filtering**:
 

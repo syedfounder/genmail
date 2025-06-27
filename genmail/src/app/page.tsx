@@ -10,7 +10,11 @@ import supabase from "@/lib/supabaseClient";
 import SeoContent from "@/components/SeoContent";
 import HowItWorks from "@/components/HowItWorks";
 import Pricing from "@/components/Pricing";
+import PrivacyFeatures from "@/components/PrivacyFeatures";
 import { QRCodeSVG } from "qrcode.react";
+import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -25,6 +29,11 @@ export default function Home() {
     name: string;
   } | null>(null);
   const { theme } = useTheme();
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -80,6 +89,11 @@ export default function Home() {
   }, [showQR]);
 
   const generateInbox = async () => {
+    if (userId) {
+      router.push("/dashboard");
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
@@ -127,41 +141,25 @@ export default function Home() {
         "bg-background"
       )}
     >
-      {/* Gradients */}
-      {mounted && (
-        <>
-          <div
-            className="absolute top-0 left-0 w-full h-[1400px] pointer-events-none"
-            style={{
-              background:
-                theme === "dark"
-                  ? "radial-gradient(ellipse 50% 50% at 50% 0%, #372F84, transparent 80%)"
-                  : "radial-gradient(ellipse 50% 50% at 50% 0%, rgba(55, 47, 132, 0.25), transparent 75%)",
-            }}
-          />
-          <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none bg-noise opacity-[0.05]"></div>
-        </>
-      )}
+      {/* Header is now handled by layout.tsx */}
 
-      {/* Mobile-Optimized Header */}
-      <MobileHeader currentPage="/" />
-
-      {/* Hero Section - Always visible */}
-      <main
-        id="hero"
-        className="flex flex-col items-center justify-center flex-1 px-6 pt-10 pb-20 relative z-10"
-      >
-        <div className="max-w-4xl mx-auto text-center">
-          <a
-            href="/pricing"
-            className="font-sans inline-flex items-center gap-2 bg-secondary border border-border rounded-full px-4 py-1.5 text-sm font-medium mb-6 hover:bg-accent transition-colors"
-          >
-            <span>Introducing Custom Inboxes</span>
-            <span className="font-semibold">Go Pro →</span>
-          </a>
+      {/* Main Content */}
+      <main className="flex flex-col items-center justify-center flex-1 px-6 pt-10 pb-20 relative z-10">
+        <div className="text-center max-w-3xl mx-auto">
+          <div className="relative inline-block mb-4 md:mb-8">
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#372F84] to-blue-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
+            <Link
+              href="/pricing"
+              className="relative font-sans inline-flex items-center gap-2 bg-secondary border border-border rounded-full px-4 py-1.5 text-sm font-medium hover:bg-accent transition-colors"
+            >
+              <span>Introducing Custom Inboxes</span>
+              <span className="font-semibold">Go Pro →</span>
+            </Link>
+          </div>
           {/* Tagline */}
-          <h1 className="font-serif text-[60px] font-bold tracking-tighter mb-6 leading-tight">
-            Private, Temporary Email{" "}
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-[60px] font-bold tracking-tight mb-6 leading-tight">
+            Private, Temporary Email
+            <br className="md:hidden" />{" "}
             <span className="text-black dark:text-white">in 1 Click</span>
           </h1>
 
@@ -354,6 +352,87 @@ export default function Home() {
             />
           </section>
         )}
+        {/* Built with Section */}
+        <section className="pt-16 pb-4 sm:pb-8 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex justify-center">
+              <div className="flex items-center gap-3 sm:gap-4 text-base sm:text-lg text-muted-foreground font-sans">
+                <span>Built with</span>
+                <a
+                  href="https://lovable.dev"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  <Image
+                    src="/lovable-logo-black.svg"
+                    alt="Lovable"
+                    width={70}
+                    height={13}
+                    className="dark:hidden sm:hidden"
+                  />
+                  <Image
+                    src="/lovable-logo-white.svg"
+                    alt="Lovable"
+                    width={70}
+                    height={13}
+                    className="hidden dark:block sm:dark:hidden"
+                  />
+                  <Image
+                    src="/lovable-logo-black.svg"
+                    alt="Lovable"
+                    width={100}
+                    height={18}
+                    className="hidden sm:block dark:sm:hidden"
+                  />
+                  <Image
+                    src="/lovable-logo-white.svg"
+                    alt="Lovable"
+                    width={100}
+                    height={18}
+                    className="hidden sm:dark:block"
+                  />
+                </a>
+                <span>&</span>
+                <a
+                  href="https://cursor.sh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  <Image
+                    src="/cursor-logo.svg"
+                    alt="Cursor"
+                    width={54}
+                    height={10}
+                    className="dark:hidden sm:hidden"
+                  />
+                  <Image
+                    src="/cursor-logo-white.svg"
+                    alt="Cursor"
+                    width={54}
+                    height={10}
+                    className="hidden dark:block sm:dark:hidden"
+                  />
+                  <Image
+                    src="/cursor-logo.svg"
+                    alt="Cursor"
+                    width={78}
+                    height={15}
+                    className="hidden sm:block dark:sm:hidden"
+                  />
+                  <Image
+                    src="/cursor-logo-white.svg"
+                    alt="Cursor"
+                    width={78}
+                    height={15}
+                    className="hidden sm:dark:block"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <SeoContent />
@@ -621,7 +700,12 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <Pricing />
+
+      <PrivacyFeatures />
+
+      <div className="w-full max-w-6xl mx-auto">
+        <Pricing />
+      </div>
 
       {/* Technology Section */}
       <section id="technology" className="py-20 px-6 font-sans relative z-10">

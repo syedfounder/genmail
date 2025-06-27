@@ -72,3 +72,35 @@
     @apply bg-background text-foreground tracking-tight;
   }
 }
+
+@keyframes shine {
+  from {
+    transform: translateX(-100%) skewX(-30deg);
+  }
+  to {
+    transform: translateX(200%) skewX(-30deg);
+  }
+}
+
+.shine-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%) skewX(-30deg);
+  animation: shine 4s infinite ease-in-out;
+  animation-delay: 2s; /* Add a delay so it doesn't run constantly on page load */
+}

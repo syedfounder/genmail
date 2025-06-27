@@ -34,18 +34,13 @@ export default function SeoContent() {
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
         {/* Left Column */}
         <div className="md:pr-8">
-          <h2 className="font-serif text-5xl font-bold tracking-tighter leading-tight mb-6">
-            Why use a{" "}
-            <span className="text-foreground/80 relative inline-block">
-              temporary
-              <span className="absolute bottom-1 left-0 w-full h-1 bg-purple-500/30"></span>
-            </span>{" "}
-            email?
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6">
+            Why use a <span>temporary</span> email?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 tracking-tight">
             Take control of your digital footprint. Genmail provides a secure,
-            anonymous, and disposable temporary email solution to protect you from spam
-            and data breaches.
+            anonymous, and disposable temporary email solution to protect you
+            from spam and data breaches.
           </p>
           <Button
             variant="outline"

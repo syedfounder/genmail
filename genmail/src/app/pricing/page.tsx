@@ -44,12 +44,16 @@ export default function Pricing() {
       enableSystem
       disableTransitionOnChange
     >
-      <div className="min-h-screen bg-background text-foreground">
-        {/* Mobile-Optimized Header */}
-        <MobileHeader currentPage="/pricing" />
+      <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+        {/* Gradients */}
+        {mounted && (
+          <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none bg-noise opacity-[0.05]"></div>
+        )}
+
+        {/* Header is now handled by layout.tsx */}
 
         {/* Main Content */}
-        <main className="font-sans max-w-6xl mx-auto px-6 py-16">
+        <main className="relative z-10 p-6 pt-10">
           <div className="space-y-12">
             {/* Header */}
             <div className="text-center">

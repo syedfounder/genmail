@@ -22,52 +22,29 @@ export default function TermsOfService() {
       enableSystem
       disableTransitionOnChange
     >
-      <div className="min-h-screen bg-background text-foreground">
-        {/* Navigation */}
-        <nav className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center">
+      <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+        {/* Gradients */}
                 {mounted && (
-                  <Image
-                    src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
-                    alt="Genmail Logo"
-                    width={64}
-                    height={22}
-                  />
-                )}
-              </Link>
-              <div className="flex items-center gap-6">
-                <Link
-                  href="/"
-                  className="font-sans text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Back to Home
-                </Link>
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </nav>
+          <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none bg-noise opacity-[0.05]"></div>
+        )}
+
+        {/* Header is now handled by layout.tsx */}
 
         {/* Main Content */}
-        <main className="font-sans max-w-4xl mx-auto px-6 py-16">
-          <div className="space-y-12">
-            {/* Header */}
-            <div className="text-center">
-              <h1 className="font-serif text-5xl font-bold tracking-tighter mb-6">
+        <main className="flex flex-col items-center flex-1 px-6 pt-10 pb-20 relative z-10">
+          <article className="max-w-4xl w-full">
+            <h1 className="font-sans text-5xl font-bold tracking-tighter mb-4">
                 Terms of Service
               </h1>
-              <p className="font-sans text-lg text-muted-foreground mb-4">
+            <p className="font-sans text-lg text-muted-foreground">
                 The rules and guidelines for using our temporary email service
               </p>
               <p className="font-sans text-sm text-muted-foreground">
                 Last updated: December 17, 2024
               </p>
-            </div>
 
             {/* Introduction */}
-            <section className="bg-secondary/30 border border-border/50 rounded-2xl p-8">
+            <section className="bg-secondary/30 border border-border/50 rounded-2xl p-8 my-12">
               <h2 className="font-sans text-2xl font-semibold mb-4">
                 Agreement to Terms
               </h2>
@@ -90,7 +67,7 @@ export default function TermsOfService() {
             </section>
 
             {/* Service Description */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Service Description
               </h2>
@@ -135,7 +112,7 @@ export default function TermsOfService() {
             </section>
 
             {/* Acceptable Use */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Acceptable Use Policy
               </h2>
@@ -173,7 +150,7 @@ export default function TermsOfService() {
             </section>
 
             {/* User Responsibilities */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 User Responsibilities
               </h2>
@@ -252,7 +229,7 @@ export default function TermsOfService() {
             </section>
 
             {/* Service Availability */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Service Availability & Limitations
               </h2>
@@ -263,7 +240,7 @@ export default function TermsOfService() {
                     <h3 className="font-sans font-semibold text-xl mb-4">
                       Service Availability
                     </h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
+                    <ul className="font-sans space-y-2 text-sm text-muted-foreground">
                       <li>
                         • We strive for 99.9% uptime but cannot guarantee it
                       </li>
@@ -283,7 +260,7 @@ export default function TermsOfService() {
                     <h3 className="font-sans font-semibold text-xl mb-4">
                       Rate Limits
                     </h3>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
+                    <ul className="font-sans space-y-2 text-sm text-muted-foreground">
                       <li>• Free users may be subject to usage limits</li>
                       <li>
                         • Excessive use may result in temporary restrictions
@@ -297,12 +274,13 @@ export default function TermsOfService() {
             </section>
 
             {/* Privacy & Data */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Privacy & Data Handling
               </h2>
 
               <div className="bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-900/20 border border-blue-200/50 dark:border-blue-800/50 rounded-xl p-6">
+                <div className="font-sans">
                 <p className="text-muted-foreground leading-relaxed mb-4">
                   Your privacy is paramount to us. By using our Service, you
                   acknowledge and agree to our data handling practices as
@@ -352,17 +330,18 @@ export default function TermsOfService() {
                       />
                     </svg>
                   </Link>
+                  </div>
                 </div>
               </div>
             </section>
 
             {/* Disclaimers */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
-                Disclaimers & Limitation of Liability
+                Disclaimer of Warranties
               </h2>
 
-              <div className="space-y-6">
+              <div className="font-sans space-y-6">
                 <div className="bg-orange-50/50 dark:bg-orange-900/20 border border-orange-200/50 dark:border-orange-800/50 rounded-xl p-6">
                   <h3 className="font-sans font-semibold text-xl mb-3 text-orange-700 dark:text-orange-300">
                     Service &ldquo;As-Is&rdquo;
@@ -379,12 +358,12 @@ export default function TermsOfService() {
                   <h3 className="font-sans font-semibold text-xl mb-3 text-red-700 dark:text-red-300">
                     Limitation of Liability
                   </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-3 font-sans">
                     To the maximum extent permitted by law, we shall not be
                     liable for any indirect, incidental, special, consequential,
                     or punitive damages, including but not limited to:
                   </p>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
+                  <ul className="font-sans space-y-1 text-sm text-muted-foreground">
                     <li>• Loss of data or emails</li>
                     <li>• Business interruption</li>
                     <li>• Lost profits or revenue</li>
@@ -397,7 +376,7 @@ export default function TermsOfService() {
                   <h3 className="font-sans font-semibold text-xl mb-3 text-blue-700 dark:text-blue-300">
                     User Indemnification
                   </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <p className="font-sans text-muted-foreground text-sm leading-relaxed">
                     You agree to indemnify and hold us harmless from any claims,
                     damages, or expenses arising from your use of the Service,
                     violation of these Terms, or infringement of any rights of
@@ -408,7 +387,7 @@ export default function TermsOfService() {
             </section>
 
             {/* Termination */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
                 Termination
               </h2>
@@ -419,7 +398,7 @@ export default function TermsOfService() {
                     <h3 className="font-sans font-semibold text-xl mb-4">
                       By You
                     </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+                    <p className="font-sans text-muted-foreground text-sm leading-relaxed mb-3">
                       You may stop using our Service at any time by simply
                       closing your browser or navigating away from our website.
                       No formal termination process is required.
@@ -429,7 +408,7 @@ export default function TermsOfService() {
                     <h3 className="font-sans font-semibold text-xl mb-4">
                       By Us
                     </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+                    <p className="font-sans text-muted-foreground text-sm leading-relaxed mb-3">
                       We may suspend or terminate your access to our Service
                       immediately if you violate these Terms or engage in
                       prohibited activities.
@@ -438,7 +417,7 @@ export default function TermsOfService() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-border/30">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-sans text-sm text-muted-foreground">
                     <strong>Effect of Termination:</strong> Upon termination,
                     your right to use the Service ceases immediately. Any
                     temporary emails and data will be deleted according to our
@@ -449,17 +428,17 @@ export default function TermsOfService() {
             </section>
 
             {/* Changes to Terms */}
-            <section>
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
-                Changes to Terms
+                Changes to These Terms
               </h2>
 
               <div className="bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-900/20 border border-purple-200/50 dark:border-purple-800/50 rounded-xl p-6">
-                <p className="text-muted-foreground leading-relaxed mb-4">
+                <p className="font-sans text-muted-foreground leading-relaxed mb-4">
                   We reserve the right to modify these Terms at any time. When
                   we make changes:
                 </p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+                <ul className="font-sans space-y-2 text-sm text-muted-foreground">
                   <li>
                     • We will update the &ldquo;Last updated&rdquo; date at the
                     top of this page
@@ -478,10 +457,10 @@ export default function TermsOfService() {
               </div>
             </section>
 
-            {/* Contact & Governing Law */}
-            <section>
+            {/* Contact Information */}
+            <section className="my-12">
               <h2 className="font-sans text-3xl font-semibold mb-6 tracking-tight">
-                Contact Information & Legal
+                Contact Information
               </h2>
 
               <div className="grid md:grid-cols-2 gap-8">
@@ -489,10 +468,10 @@ export default function TermsOfService() {
                   <h3 className="font-sans font-semibold text-xl mb-4">
                     Contact Us
                   </h3>
-                  <p className="text-muted-foreground text-sm mb-4">
+                  <p className="font-sans text-muted-foreground text-sm mb-4">
                     If you have questions about these Terms of Service:
                   </p>
-                  <div className="space-y-2 text-sm">
+                  <div className="font-sans space-y-2 text-sm">
                     <p>
                       <strong>Email:</strong> legal@genmail.io
                     </p>
@@ -506,7 +485,7 @@ export default function TermsOfService() {
                   <h3 className="font-sans font-semibold text-xl mb-4">
                     Governing Law
                   </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <p className="font-sans text-muted-foreground text-sm leading-relaxed">
                     These Terms are governed by and construed in accordance with
                     applicable laws. Any disputes will be resolved through
                     binding arbitration where permitted by law.
@@ -514,31 +493,292 @@ export default function TermsOfService() {
                 </div>
               </div>
             </section>
+          </article>
+        </main>
+        {/* Footer */}
+        <footer className="bg-background border-t border-border/30 py-16 px-6 font-sans relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8 mb-12">
+              {/* Brand Column */}
+              <div className="md:col-span-1">
+                <div className="flex items-center mb-4">
+                  {mounted && (
+                    <Image
+                      src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
+                      alt="Genmail Logo"
+                      width={64}
+                      height={22}
+                    />
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  Private, temporary email addresses that self-destruct. Protect
+                  your privacy online with zero data retention.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  <span>Service Online</span>
+                </div>
+              </div>
 
-            {/* Back to Home */}
-            <div className="text-center pt-12">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-[#372F84] hover:bg-[#372F84]/90 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {/* Product Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Product
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/pricing"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#how-it-works"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      How it Works
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/api"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      API
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#pro-features"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pro Features
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Quick Access Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Quick Access
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/#hero"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Generate Email
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#tutorial"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Tutorial
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/pricing"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pricing
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#technology"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Technology
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#use-cases"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Use Cases
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/#faq"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      FAQs
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Support & Legal Column */}
+              <div>
+                <h3 className="font-semibold text-foreground mb-4 tracking-tight">
+                  Support & Legal
+                </h3>
+                <ul className="space-y-3">
+                  <li>
+                    <a
+                      href="/help"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Help Center
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/contact"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Contact Us
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/privacy"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Privacy Policy
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/terms"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Terms of Service
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/security"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Security
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Section */}
+            <div className="border-t border-border/20 pt-8">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                {/* Left: Copyright & Built with */}
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <p className="text-sm text-muted-foreground">
+                    © 2024{" "}
+                    <span className="font-serif font-semibold">genmail</span>.
+                    All rights reserved.
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Built with</span>
+                    <a
+                      href="https://lovable.dev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-foreground transition-colors"
+                    >
+                      <Image
+                        src="/lovable-logo-black.svg"
+                        alt="Lovable"
+                        width={60}
+                        height={10}
+                        className="dark:hidden"
+                      />
+                      <Image
+                        src="/lovable-logo-white.svg"
+                        alt="Lovable"
+                        width={60}
+                        height={10}
+                        className="hidden dark:block"
+                      />
+                    </a>
+                    <span>&</span>
+                    <a
+                      href="https://cursor.sh"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-foreground transition-colors"
+                    >
+                      <Image
+                        src="/cursor-logo.svg"
+                        alt="Cursor"
+                        width={46}
+                        height={9}
+                        className="dark:hidden"
+                      />
+                      <Image
+                        src="/cursor-logo-white.svg"
+                        alt="Cursor"
+                        width={46}
+                        height={9}
+                        className="hidden dark:block"
+                      />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right: Security badges */}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-green-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>GDPR Compliant</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-blue-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>TLS Encrypted</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-3 h-3 text-purple-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
                 >
                   <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                        fillRule="evenodd"
+                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                        clipRule="evenodd"
                   />
                 </svg>
-                Back to <span className="font-serif">genmail</span>
-              </Link>
+                    <span>Zero Logs</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </main>
+        </footer>
       </div>
     </ThemeProvider>
   );
