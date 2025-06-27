@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
+import { createClient } from "@supabase/supabase-js";
 import {
   Card,
   CardContent,
@@ -28,12 +29,22 @@ import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,
     downloadFormat: "eml",
     maxInboxes: 10,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+
+  const [supabase] = useState(() =>
+    createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -221,14 +232,14 @@ export default function SettingsPage() {
               Download a JSON file containing all your inboxes and emails.
             </p>
           </div>
-            <Button
+          <Button
             variant="outline"
-              onClick={handleExportData}
+            onClick={handleExportData}
             className="w-full sm:w-auto"
-            >
+          >
             <Download className="mr-2 h-4 w-4" />
             Export Data
-            </Button>
+          </Button>
         </CardContent>
       </Card>
 
