@@ -1,8 +1,11 @@
 "use client";
 
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = "force-dynamic";
+
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "@/lib/supabaseClient";
 import { useUser } from "@clerk/nextjs";
 import {
   Mail,
@@ -140,10 +143,7 @@ export default function InboxPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  // Using the validated Supabase client
 
   // Move fetchEmails outside useEffect so it can be called from handlePasswordSubmit
   const fetchEmails = async () => {

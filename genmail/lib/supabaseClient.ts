@@ -44,28 +44,64 @@ function validateSupabaseUrl(url: string): string {
   }
 }
 
-// Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Only initialize on the client side or when explicitly needed
+let _supabaseClient: any = null;
 
-// Validate environment variables
-if (!supabaseUrl) {
-  throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_URL");
+function getSupabaseClient() {
+  if (_supabaseClient) {
+    return _supabaseClient;
+  }
+
+  // Only initialize on the client side to avoid build-time issues
+  if (typeof window === "undefined") {
+    // Return a mock client for SSR/build time
+    return {
+      from: () => ({
+        select: () => Promise.resolve({ data: [], error: null }),
+        insert: () => Promise.resolve({ data: null, error: null }),
+        update: () => Promise.resolve({ data: null, error: null }),
+        delete: () => Promise.resolve({ data: null, error: null }),
+      }),
+      auth: {
+        getSession: () =>
+          Promise.resolve({ data: { session: null }, error: null }),
+      },
+    };
+  }
+
+  // Supabase configuration
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  // Validate environment variables
+  if (!supabaseUrl) {
+    throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_URL");
+  }
+
+  if (!supabaseAnonKey) {
+    throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  }
+
+  // Validate and clean the URL
+  const cleanSupabaseUrl = validateSupabaseUrl(supabaseUrl);
+
+  // Create and cache the Supabase client
+  _supabaseClient = createClient(cleanSupabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: "pkce",
+    },
+  });
+
+  return _supabaseClient;
 }
-
-if (!supabaseAnonKey) {
-  throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY");
-}
-
-// Validate and clean the URL
-const cleanSupabaseUrl = validateSupabaseUrl(supabaseUrl);
 
 // Create and export the Supabase client
-export const supabase = createClient(cleanSupabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: "pkce",
+export const supabase = new Proxy({} as any, {
+  get(target, prop) {
+    const client = getSupabaseClient();
+    return client[prop as keyof typeof client];
   },
 });
 

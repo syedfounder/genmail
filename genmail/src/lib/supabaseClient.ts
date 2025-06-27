@@ -31,6 +31,13 @@ function getSupabaseClient(): SupabaseClient {
     return _supabase;
   }
 
+  // Only initialize on the client side to avoid build-time issues
+  if (typeof window === "undefined") {
+    throw new Error(
+      "Supabase client can only be initialized on the client side"
+    );
+  }
+
   // Supabase configuration
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
