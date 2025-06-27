@@ -7,16 +7,7 @@ import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import supabase from "@/lib/supabaseClient";
 import { useUser } from "@clerk/nextjs";
-import {
-  Mail,
-  Inbox,
-  Clock,
-  Pilcrow,
-  BookOpen,
-  ChevronLeft,
-  Trash2,
-  Lock,
-} from "lucide-react";
+import { Mail, Inbox, ChevronLeft, Trash2, Lock } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -25,14 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { EmailViewer } from "@/components/EmailViewer";
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

@@ -6,15 +6,8 @@ import { createClient } from "@supabase/supabase-js";
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = "force-dynamic";
 
-// Sanitize filename to prevent path traversal and other attacks
-function sanitizeFilename(subject: string, format: "eml" | "txt"): string {
-  // Replace potentially problematic characters with an underscore
-  const safeSubject = subject.replace(/[^a-z0-9_.-]/gi, "_").substring(0, 50);
-  return `${safeSubject || "email"}.${format}`;
-}
-
 // Construct a valid .eml file content from email data
-function constructEml(email: any): string {
+function constructEml(email: Record<string, any>): string {
   let emlContent = "";
 
   // Add standard headers
@@ -37,7 +30,7 @@ function constructEml(email: any): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }

@@ -4,8 +4,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
-import { useUser, useAuth } from "@clerk/nextjs";
-import supabase from "@/lib/supabaseClient";
+import { useUser } from "@clerk/nextjs";
 import {
   Card,
   CardContent,
@@ -14,17 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Shield,
   Bell,
-  Trash2,
   Download,
   Clock,
   Key,
-  AlertTriangle,
   CheckCircle,
   Settings,
 } from "lucide-react";
@@ -32,15 +28,12 @@ import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { user } = useUser();
-  const { getToken } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,
     downloadFormat: "eml",
     maxInboxes: 10,
   });
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -86,15 +79,16 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDeleteAllData = async () => {
-    if (
-      confirm(
-        "Are you sure you want to delete all your data? This action cannot be undone."
-      )
-    ) {
-      toast.error("Data deletion initiated. You will be logged out shortly.");
-    }
-  };
+  // Placeholder for future delete functionality
+  // const handleDeleteAllData = async () => {
+  //   if (
+  //     confirm(
+  //       "Are you sure you want to delete all your data? This action cannot be undone."
+  //     )
+  //   ) {
+  //     toast.error("Data deletion initiated. You will be logged out shortly.");
+  //   }
+  // };
 
   if (!mounted) return null;
 
