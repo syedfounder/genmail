@@ -4,16 +4,17 @@ import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { getClientIP } from "@/lib/utils";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   console.log("--- [API /api/verifyInboxPassword] Starting verification ---");
 
   try {
     const clientIP = getClientIP(request);
+
+    // Initialize Supabase Admin Client
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Rate limit check
     const { data: isLimited, error: rateLimitError } = await supabaseAdmin.rpc(

@@ -2,11 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function DELETE(request: Request) {
   console.log("--- [API /api/deleteInbox] Starting deletion ---");
 
@@ -19,6 +14,12 @@ export async function DELETE(request: Request) {
       console.log("No userId found - user not authenticated");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Initialize Supabase Admin Client
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Rate limit check based on userId
     const { data: isLimited, error: rateLimitError } = await supabaseAdmin.rpc(

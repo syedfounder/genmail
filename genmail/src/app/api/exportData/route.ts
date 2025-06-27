@@ -2,13 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase Admin Client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function GET(request: Request) {
+export async function GET() {
   console.log("--- [API /api/exportData] Received request ---");
 
   try {
@@ -20,6 +14,12 @@ export async function GET(request: Request) {
     }
 
     console.log(`[API /api/exportData] Starting export for userId: ${userId}`);
+
+    // Initialize Supabase Admin Client
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Fetch all inboxes and their associated emails for the user
     const { data: inboxes, error } = await supabaseAdmin
