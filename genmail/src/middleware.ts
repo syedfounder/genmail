@@ -12,7 +12,7 @@ const isProtectedRoute = createRouteMatcher([
 const isPublicRoute = createRouteMatcher(["/login", "/signup"]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims } = auth();
+  const { userId, sessionClaims } = await auth();
 
   // If the user is logged in and tries to access a public route, redirect them to the dashboard
   if (userId && isPublicRoute(req)) {
