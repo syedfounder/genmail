@@ -4,7 +4,7 @@
 export const dynamic = "force-dynamic";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import supabase from "@/lib/supabaseClient";
 import { useUser } from "@clerk/nextjs";
 import { Mail, Inbox, ChevronLeft, Trash2, Lock } from "lucide-react";
@@ -135,7 +135,7 @@ export default function InboxPage() {
   // Using the validated Supabase client
 
   // Move fetchEmails outside useEffect so it can be called from handlePasswordSubmit
-  const fetchEmails = async () => {
+  const fetchEmails = useCallback(async () => {
     const { data: emailsData, error: emailsError } = await supabase
       .from("emails")
       .select(
@@ -148,7 +148,7 @@ export default function InboxPage() {
       throw new Error("Failed to fetch emails for this inbox.");
     }
     setEmails(emailsData || []);
-  };
+  }, [inboxId]);
 
   useEffect(() => {
     if (!user || !inboxId) return;

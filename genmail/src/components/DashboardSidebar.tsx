@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useInboxStore } from "@/lib/inbox-store";
 import { useUser } from "@clerk/nextjs";
-import { toast } from "sonner";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
@@ -32,8 +31,7 @@ const DashboardSidebar = ({
   isMobile = false,
 }: DashboardSidebarProps) => {
   const { user } = useUser();
-  const { inboxes, fetchInboxes, addInbox } = useInboxStore();
-  const [isCreating, setIsCreating] = useState(false);
+  const { inboxes, fetchInboxes } = useInboxStore();
   const [searchQuery, setSearchQuery] = useState("");
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);

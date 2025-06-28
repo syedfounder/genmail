@@ -400,8 +400,8 @@ export default function DashboardPage() {
                     <Inbox className="h-12 w-12 text-muted-foreground" />
                     <h3 className="text-xl font-semibold">No inboxes yet</h3>
                     <p className="text-muted-foreground">
-                      Click "New Inbox" to get your first temporary email
-                      address.
+                      Click &quot;New Inbox&quot; to get your first temporary
+                      email address.
                     </p>
                   </div>
                 </TableCell>
@@ -416,9 +416,9 @@ export default function DashboardPage() {
           Feature Spotlight: Privacy First
         </h2>
         <p className="mt-2 text-muted-foreground max-w-xl mx-auto">
-          Remember, every inbox you create is completely anonymous. We don't
-          track your IP or store any personal information linking you to an
-          inbox.
+          Remember, every inbox you create is completely anonymous. We
+          don&apos;t track your IP or store any personal information linking you
+          to an inbox.
         </p>
         <div className="mt-6 flex justify-center gap-6">
           <div className="text-center">

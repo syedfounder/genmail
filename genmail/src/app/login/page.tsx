@@ -3,6 +3,14 @@
 import { useSignIn, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+interface ClerkError {
+  errors?: Array<{
+    longMessage?: string;
+    message: string;
+  }>;
+  message: string;
+}
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -60,7 +68,7 @@ export default function LoginPage() {
     } catch (err) {
       const errorMessage =
         err instanceof Error
-          ? (err as any).errors?.[0]?.longMessage || err.message
+          ? (err as ClerkError)?.errors?.[0]?.longMessage || err.message
           : "An error occurred during login.";
       console.error("Login error:", err);
       setError(errorMessage);
@@ -84,7 +92,7 @@ export default function LoginPage() {
     } catch (err) {
       const errorMessage =
         err instanceof Error
-          ? (err as any).errors?.[0]?.longMessage || err.message
+          ? (err as ClerkError)?.errors?.[0]?.longMessage || err.message
           : "An error occurred sending reset code.";
       setError(errorMessage);
     } finally {
@@ -115,7 +123,7 @@ export default function LoginPage() {
     } catch (err) {
       const errorMessage =
         err instanceof Error
-          ? (err as any).errors?.[0]?.longMessage || err.message
+          ? (err as ClerkError)?.errors?.[0]?.longMessage || err.message
           : "An error occurred resetting password.";
       setError(errorMessage);
     } finally {

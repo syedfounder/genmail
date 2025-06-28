@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 interface Inbox {
   id: string;
@@ -15,10 +16,10 @@ interface InboxState {
   setInboxes: (inboxes: Inbox[]) => void;
   addInbox: (inbox: Inbox) => void;
   deleteInbox: (inboxId: string) => void;
-  fetchInboxes: (userId: string, supabase: any) => Promise<void>;
+  fetchInboxes: (userId: string, supabase: SupabaseClient) => Promise<void>;
 }
 
-export const useInboxStore = create<InboxState>((set, get) => ({
+export const useInboxStore = create<InboxState>((set) => ({
   inboxes: [],
   setInboxes: (inboxes) => set({ inboxes }),
   addInbox: (inbox) => set((state) => ({ inboxes: [inbox, ...state.inboxes] })),

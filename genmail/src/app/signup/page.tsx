@@ -3,6 +3,14 @@
 import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+interface ClerkError {
+  errors?: Array<{
+    longMessage?: string;
+    message: string;
+  }>;
+  message: string;
+}
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,7 +59,7 @@ export default function SignupPage() {
     } catch (err) {
       const errorMessage =
         err instanceof Error
-          ? (err as any).errors?.[0]?.longMessage || err.message
+          ? (err as ClerkError)?.errors?.[0]?.longMessage || err.message
           : "An error occurred during sign up.";
       console.error("Signup error:", err);
       setError(errorMessage);
@@ -80,7 +88,7 @@ export default function SignupPage() {
     } catch (err) {
       const errorMessage =
         err instanceof Error
-          ? (err as any).errors?.[0]?.longMessage || err.message
+          ? (err as ClerkError)?.errors?.[0]?.longMessage || err.message
           : "Verification failed. Please try again.";
       console.error("Verification error:", err);
       setError(errorMessage);
