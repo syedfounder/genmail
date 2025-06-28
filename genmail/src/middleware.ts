@@ -1,5 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
+interface PublicMetadata {
+  isPro?: boolean;
+}
+
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/api/deleteAccount",
@@ -29,7 +33,8 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     // Check for pro status
-    const isPro = (sessionClaims?.publicMetadata as any)?.isPro === true;
+    const isPro =
+      (sessionClaims?.publicMetadata as PublicMetadata)?.isPro === true;
 
     if (!isPro) {
       // User is not a pro member, redirect to pricing page
