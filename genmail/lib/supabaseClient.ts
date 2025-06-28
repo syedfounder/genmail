@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 // Helper function to validate and clean URL
 function validateSupabaseUrl(url: string): string {
@@ -45,7 +45,7 @@ function validateSupabaseUrl(url: string): string {
 }
 
 // Only initialize on the client side or when explicitly needed
-let _supabaseClient: any = null;
+let _supabaseClient: SupabaseClient | null = null;
 
 function getSupabaseClient() {
   if (_supabaseClient) {
@@ -98,10 +98,10 @@ function getSupabaseClient() {
 }
 
 // Create and export the Supabase client
-export const supabase = new Proxy({} as any, {
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
   get(target, prop) {
     const client = getSupabaseClient();
-    return client[prop as keyof typeof client];
+    return Reflect.get(client, prop, client);
   },
 });
 

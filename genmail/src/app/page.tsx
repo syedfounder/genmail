@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import MobileHeader from "@/components/MobileHeader";
 import InboxViewer from "@/components/InboxViewer";
 import supabase from "@/lib/supabaseClient";
 import SeoContent from "@/components/SeoContent";
@@ -29,9 +28,6 @@ export default function Home() {
     name: string;
   } | null>(null);
   const { theme } = useTheme();
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { userId } = useAuth();
   const router = useRouter();
 

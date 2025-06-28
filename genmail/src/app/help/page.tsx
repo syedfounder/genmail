@@ -1,17 +1,13 @@
 "use client";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
-import { Accordion, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function HelpCenter() {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
 
   useEffect(() => {
@@ -439,8 +435,8 @@ export default function HelpCenter() {
           {/* Page Header */}
           <div className="text-center mb-16">
             <h1 className="text-5xl font-bold tracking-tighter mb-4 font-serif">
-                Help Center
-              </h1>
+              Help Center
+            </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Find answers to your questions about{" "}
               <span className="font-serif">genmail</span>, privacy, and more.
@@ -450,13 +446,13 @@ export default function HelpCenter() {
           {/* Search and Filter Section */}
           <div className="sticky top-[76px] bg-background/80 backdrop-blur-sm z-40 py-6 mb-8">
             <div className="relative mb-6">
-                <input
-                  type="text"
+              <input
+                type="text"
                 placeholder="Search articles..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+              />
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <svg
                   className="w-5 h-5 text-muted-foreground"
@@ -489,8 +485,8 @@ export default function HelpCenter() {
                   {category.name}
                 </button>
               ))}
-                  </div>
-                </div>
+            </div>
+          </div>
 
           <div className="grid md:grid-cols-12 gap-12">
             {/* Quick Access Links (Left Sidebar) */}
@@ -513,15 +509,15 @@ export default function HelpCenter() {
                         <h4 className="font-semibold mb-1">{item.title}</h4>
                         <p className="text-xs text-muted-foreground">
                           {item.count} articles
-                  </p>
-                </div>
+                        </p>
+                      </div>
                       <a
                         href={`#${item.title.toLowerCase().replace(" ", "-")}`}
                         className="text-sm font-medium text-primary mt-3 block"
                       >
                         View →
                       </a>
-                  </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -539,35 +535,35 @@ export default function HelpCenter() {
                     )
                     .map((category) => (
                       <section
-                    key={category.id}
+                        key={category.id}
                         id={category.id}
                         className="scroll-mt-24"
                       >
                         <h2 className="text-3xl font-semibold mb-8 flex items-center gap-3 font-serif">
-                    {category.icon}
-                    {category.name}
+                          {category.icon}
+                          {category.name}
                         </h2>
                         <div className="space-y-4">
                           {filteredArticles
                             .filter((a) => a.category === category.id)
                             .map((article) => (
                               <HelpArticle key={article.id} article={article} />
-                ))}
-              </div>
-            </section>
+                            ))}
+                        </div>
+                      </section>
                     ))}
                 </div>
               ) : (
                 <div className="text-center py-16 border-2 border-dashed border-border rounded-lg">
                   <h3 className="text-xl font-semibold mb-2">
                     No Articles Found
-                    </h3>
+                  </h3>
                   <p className="text-muted-foreground">
                     Try adjusting your search or filter.
                   </p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
           </div>
         </main>
         {/* Footer */}
@@ -713,7 +709,7 @@ export default function HelpCenter() {
                   </li>
                   <li>
                     <a
-                  href="/contact"
+                      href="/contact"
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Contact Us
@@ -811,15 +807,15 @@ export default function HelpCenter() {
                       className="w-3 h-3 text-green-500"
                       fill="currentColor"
                       viewBox="0 0 20 20"
-                >
-                  <path
+                    >
+                      <path
                         fillRule="evenodd"
                         d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                         clipRule="evenodd"
-                  />
-                </svg>
+                      />
+                    </svg>
                     <span>GDPR Compliant</span>
-            </div>
+                  </div>
                   <div className="flex items-center gap-2">
                     <svg
                       className="w-3 h-3 text-blue-500"
@@ -833,7 +829,7 @@ export default function HelpCenter() {
                       />
                     </svg>
                     <span>TLS Encrypted</span>
-          </div>
+                  </div>
                   <div className="flex items-center gap-2">
                     <svg
                       className="w-3 h-3 text-purple-500"

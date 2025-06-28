@@ -6,28 +6,6 @@ import { createClient } from "@supabase/supabase-js";
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = "force-dynamic";
 
-// Construct a valid .eml file content from email data
-function constructEml(email: Record<string, any>): string {
-  let emlContent = "";
-
-  // Add standard headers
-  emlContent += `From: ${email.from_address}\r\n`;
-  emlContent += `To: ${email.to_address}\r\n`;
-  emlContent += `Subject: ${email.subject}\r\n`;
-  emlContent += `Date: ${new Date(email.received_at).toUTCString()}\r\n`;
-  emlContent += `Message-ID: <${
-    email.message_id || `${email.id}@genmail.app`
-  }>\r\n`;
-  emlContent += "MIME-Version: 1.0\r\n";
-  emlContent += 'Content-Type: text/plain; charset="UTF-8"\r\n';
-  emlContent += "Content-Transfer-Encoding: 7bit\r\n\r\n";
-
-  // Add the plain text body
-  emlContent += email.body || "This email has no plain text content.";
-
-  return emlContent;
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();

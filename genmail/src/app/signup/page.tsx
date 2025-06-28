@@ -48,11 +48,13 @@ export default function SignupPage() {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPendingVerification(true);
       setError("");
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? (err as any).errors?.[0]?.longMessage || err.message
+          : "An error occurred during sign up.";
       console.error("Signup error:", err);
-      setError(
-        err.errors?.[0]?.longMessage || "An error occurred during sign up."
-      );
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -75,11 +77,13 @@ export default function SignupPage() {
         console.error("Verification incomplete:", completeSignUp);
         setError("Verification failed. Please try again.");
       }
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? (err as any).errors?.[0]?.longMessage || err.message
+          : "Verification failed. Please try again.";
       console.error("Verification error:", err);
-      setError(
-        err.errors?.[0]?.longMessage || "Verification failed. Please try again."
-      );
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

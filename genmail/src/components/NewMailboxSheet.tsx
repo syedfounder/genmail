@@ -61,7 +61,7 @@ export function NewMailboxSheet({ open, onOpenChange }: NewMailboxSheetProps) {
       } else {
         toast.error(newInboxData.error || "Failed to create mailbox.");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred.");
     } finally {
       setIsCreating(false);

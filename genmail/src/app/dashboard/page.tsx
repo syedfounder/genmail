@@ -34,7 +34,6 @@ import {
   RefreshCw,
   Trash2,
   Lock,
-  Tag,
 } from "lucide-react";
 import Link from "next/link";
 import { useInboxStore } from "@/lib/inbox-store";
@@ -171,7 +170,7 @@ export default function DashboardPage() {
       } else {
         toast.error(result.error || "Failed to delete inbox.");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while deleting the inbox.");
     } finally {
       setIsDeleting(false);
@@ -345,8 +344,20 @@ export default function DashboardPage() {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>{timeAgo(inbox.created_at)}</TableCell>
-                  <TableCell>{timeUntil(inbox.expires_at)}</TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {timeAgo(inbox.created_at)}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <span className="text-xs text-muted-foreground ml-2 px-2 py-0.5 rounded-full bg-muted border border-border">
+                      {timeUntil(inbox.expires_at)}
+                    </span>
+                    {inbox.password_hash && (
+                      <span className="text-xs text-muted-foreground ml-2 px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 flex items-center gap-1">
+                        <Lock className="h-3 w-3" />
+                        Protected
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-center">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -398,6 +409,31 @@ export default function DashboardPage() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="mt-12 p-8 bg-secondary/50 rounded-lg border border-dashed border-border text-center">
+        <h2 className="text-2xl font-semibold font-serif tracking-tight">
+          Feature Spotlight: Privacy First
+        </h2>
+        <p className="mt-2 text-muted-foreground max-w-xl mx-auto">
+          Remember, every inbox you create is completely anonymous. We don't
+          track your IP or store any personal information linking you to an
+          inbox.
+        </p>
+        <div className="mt-6 flex justify-center gap-6">
+          <div className="text-center">
+            <h3 className="text-3xl font-bold text-primary">100%</h3>
+            <p className="text-sm text-muted-foreground">Anonymous</p>
+          </div>
+          <div className="text-center">
+            <h3 className="text-3xl font-bold text-primary">0</h3>
+            <p className="text-sm text-muted-foreground">Logs Retained</p>
+          </div>
+          <div className="text-center">
+            <h3 className="text-3xl font-bold text-primary">24h</h3>
+            <p className="text-sm text-muted-foreground">Max Lifespan</p>
+          </div>
+        </div>
       </div>
     </div>
   );

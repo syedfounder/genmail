@@ -57,11 +57,13 @@ export default function LoginPage() {
         console.error("Sign-in incomplete", result);
         setError("Invalid email or password.");
       }
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? (err as any).errors?.[0]?.longMessage || err.message
+          : "An error occurred during login.";
       console.error("Login error:", err);
-      setError(
-        err.errors?.[0]?.longMessage || "An error occurred during login."
-      );
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -79,10 +81,12 @@ export default function LoginPage() {
         identifier: emailAddress,
       });
       setView("forgot-password-code");
-    } catch (err: any) {
-      setError(
-        err.errors?.[0]?.longMessage || "An error occurred sending reset code."
-      );
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? (err as any).errors?.[0]?.longMessage || err.message
+          : "An error occurred sending reset code.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -108,10 +112,12 @@ export default function LoginPage() {
       } else {
         setError("Invalid verification code or new password.");
       }
-    } catch (err: any) {
-      setError(
-        err.errors?.[0]?.longMessage || "An error occurred resetting password."
-      );
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? (err as any).errors?.[0]?.longMessage || err.message
+          : "An error occurred resetting password.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -342,7 +348,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground font-sans">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="font-semibold text-[#000000] dark:text-[#ffffff] hover:underline"

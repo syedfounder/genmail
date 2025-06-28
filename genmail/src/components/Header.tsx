@@ -1,7 +1,6 @@
 "use client";
 
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Link from "next/link";
 import Image from "next/image";

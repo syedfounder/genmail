@@ -179,15 +179,19 @@ export default function InboxPage() {
           setIsUnlocked(true);
           await fetchEmails();
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchInboxData();
-  }, [user, inboxId]);
+  }, [user, inboxId, fetchEmails]);
 
   const handleDeleteInbox = async () => {
     if (!inboxDetails || isDeleting) return;
@@ -237,7 +241,7 @@ export default function InboxPage() {
       } else {
         toast.error(result.error || "Failed to delete inbox.");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while deleting the inbox.");
     } finally {
       setIsDeleting(false);
@@ -260,7 +264,7 @@ export default function InboxPage() {
       } else {
         toast.error(data.error || "Incorrect password.");
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to verify password.");
     } finally {
       setPasswordLoading(false);

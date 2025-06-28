@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import supabase from "@/lib/supabaseClient";
 import {
   Inbox,
-  FilePlus,
   Settings,
   LifeBuoy,
   Search,
@@ -51,37 +50,6 @@ const DashboardSidebar = ({
       fetchInboxes(user.id, supabase);
     }
   }, [user, inboxes.length, fetchInboxes]);
-
-  const createNewInbox = async () => {
-    if (!user || isCreating) return;
-
-    setIsCreating(true);
-    try {
-      const response = await fetch("/api/createInbox", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          subscription_tier: "free",
-        }),
-      });
-
-      const newInboxData = await response.json();
-
-      if (response.ok) {
-        toast.success("New inbox created successfully!");
-        addInbox(newInboxData.inbox);
-      } else {
-        toast.error(newInboxData.error || "Failed to create inbox.");
-      }
-    } catch (error) {
-      console.error("Error creating inbox:", error);
-      toast.error("An error occurred while creating the inbox.");
-    } finally {
-      setIsCreating(false);
-    }
-  };
 
   const activeInboxes = inboxes.filter(
     (inbox) => new Date(inbox.expires_at) > new Date()

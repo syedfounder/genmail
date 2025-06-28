@@ -3,12 +3,10 @@
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = "force-dynamic";
 
-import { useUser } from "@clerk/nextjs";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { useInboxStore } from "@/lib/inbox-store";
 import { Mail, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useTheme } from "next-themes";
 import { UserNav } from "@/components/UserNav";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,9 +17,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useUser();
   const { inboxes } = useInboxStore();
-  const { resolvedTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

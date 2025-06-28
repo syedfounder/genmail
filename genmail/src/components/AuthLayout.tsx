@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, Mail, Users } from "lucide-react";
+import { ShieldCheck, Mail, Users } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
@@ -79,8 +79,9 @@ export default function AuthLayout({
                   For individuals and teams
                 </h3>
                 <p className="mt-2 text-muted-foreground font-sans">
-                  Whether you're a solo user or part of a team, genmail offers
-                  the flexibility to manage your email privacy effectively.
+                  Whether you&apos;re a solo user or part of a team, genmail
+                  offers the flexibility to manage your email privacy
+                  effectively.
                 </p>
               </div>
             </div>

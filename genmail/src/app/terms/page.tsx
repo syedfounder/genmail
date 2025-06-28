@@ -1,7 +1,6 @@
 "use client";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import Link from "next/link";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -24,7 +23,7 @@ export default function TermsOfService() {
     >
       <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
         {/* Gradients */}
-                {mounted && (
+        {mounted && (
           <div className="absolute top-0 left-0 w-full h-[800px] pointer-events-none bg-noise opacity-[0.05]"></div>
         )}
 
@@ -34,14 +33,14 @@ export default function TermsOfService() {
         <main className="flex flex-col items-center flex-1 px-6 pt-10 pb-20 relative z-10">
           <article className="max-w-4xl w-full">
             <h1 className="font-sans text-5xl font-bold tracking-tighter mb-4">
-                Terms of Service
-              </h1>
+              Terms of Service
+            </h1>
             <p className="font-sans text-lg text-muted-foreground">
-                The rules and guidelines for using our temporary email service
-              </p>
-              <p className="font-sans text-sm text-muted-foreground">
-                Last updated: December 17, 2024
-              </p>
+              The rules and guidelines for using our temporary email service
+            </p>
+            <p className="font-sans text-sm text-muted-foreground">
+              Last updated: December 17, 2024
+            </p>
 
             {/* Introduction */}
             <section className="bg-secondary/30 border border-border/50 rounded-2xl p-8 my-12">
@@ -281,55 +280,55 @@ export default function TermsOfService() {
 
               <div className="bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-900/20 border border-blue-200/50 dark:border-blue-800/50 rounded-xl p-6">
                 <div className="font-sans">
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  Your privacy is paramount to us. By using our Service, you
-                  acknowledge and agree to our data handling practices as
-                  outlined in our Privacy Policy.
-                </p>
+                  <p className="text-muted-foreground leading-relaxed mb-4">
+                    Your privacy is paramount to us. By using our Service, you
+                    acknowledge and agree to our data handling practices as
+                    outlined in our Privacy Policy.
+                  </p>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-sans font-semibold mb-3">
-                      Data Collection
-                    </h3>
-                    <ul className="space-y-1 text-sm text-muted-foreground">
-                      <li>• Temporary email content</li>
-                      <li>• Basic technical information</li>
-                      <li>• Usage patterns (anonymized)</li>
-                    </ul>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-sans font-semibold mb-3">
+                        Data Collection
+                      </h3>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        <li>• Temporary email content</li>
+                        <li>• Basic technical information</li>
+                        <li>• Usage patterns (anonymized)</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="font-sans font-semibold mb-3">
+                        Data Protection
+                      </h3>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        <li>• Automatic data deletion</li>
+                        <li>• Encrypted data transmission</li>
+                        <li>• No data selling or sharing</li>
+                      </ul>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-sans font-semibold mb-3">
-                      Data Protection
-                    </h3>
-                    <ul className="space-y-1 text-sm text-muted-foreground">
-                      <li>• Automatic data deletion</li>
-                      <li>• Encrypted data transmission</li>
-                      <li>• No data selling or sharing</li>
-                    </ul>
-                  </div>
-                </div>
 
-                <div className="mt-6 pt-4 border-t border-border/30">
-                  <Link
-                    href="/privacy"
-                    className="inline-flex items-center gap-2 text-[#372F84] hover:text-[#372F84]/80 transition-colors text-sm font-medium"
-                  >
-                    Read our full Privacy Policy
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="mt-6 pt-4 border-t border-border/30">
+                    <Link
+                      href="/privacy"
+                      className="inline-flex items-center gap-2 text-[#372F84] hover:text-[#372F84]/80 transition-colors text-sm font-medium"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </Link>
+                      Read our full Privacy Policy
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -765,13 +764,13 @@ export default function TermsOfService() {
                       className="w-3 h-3 text-purple-500"
                       fill="currentColor"
                       viewBox="0 0 20 20"
-                >
-                  <path
+                    >
+                      <path
                         fillRule="evenodd"
                         d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                         clipRule="evenodd"
-                  />
-                </svg>
+                      />
+                    </svg>
                     <span>Zero Logs</span>
                   </div>
                 </div>

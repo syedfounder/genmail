@@ -1,7 +1,6 @@
 "use client";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
-import MobileHeader from "@/components/MobileHeader";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
