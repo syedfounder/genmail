@@ -45,6 +45,14 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
+      // Debug logging
+      console.log("Signup attempt with params:", {
+        firstName,
+        lastName,
+        emailAddress,
+        password: "***",
+      });
+
       await signUp.create({
         firstName,
         lastName,
