@@ -444,8 +444,6 @@ export default function PrivacyPolicy() {
                 </div>
               </div>
             </section>
-
-
           </article>
         </main>
         {/* Footer */}
