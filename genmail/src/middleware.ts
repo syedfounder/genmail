@@ -29,7 +29,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     // Check for pro status
-    const isPro = sessionClaims?.publicMetadata?.["isPro"] === true;
+    const isPro = (sessionClaims?.publicMetadata as any)?.isPro === true;
 
     if (!isPro) {
       // User is not a pro member, redirect to pricing page
