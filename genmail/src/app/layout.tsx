@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -52,8 +53,8 @@ export default function RootLayout({
       }}
       signInUrl="/login"
       signUpUrl="/signup"
-      afterSignInUrl="/dashboard"
-      afterSignUpUrl="/dashboard"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
     >
       <html lang="en" suppressHydrationWarning>
         <head />
@@ -71,6 +72,7 @@ export default function RootLayout({
             <Header />
             {children}
             <Toaster />
+            <Analytics />
           </ThemeProvider>
         </body>
       </html>

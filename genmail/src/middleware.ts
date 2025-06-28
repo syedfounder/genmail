@@ -9,9 +9,33 @@ const isProtectedRoute = createRouteMatcher([
   "/api/verifyInboxPassword",
 ]);
 
+const isPublicRoute = createRouteMatcher(["/login", "/signup"]);
+
 export default clerkMiddleware(async (auth, req) => {
+  const { userId, sessionClaims } = auth();
+
+  // If the user is logged in and tries to access a public route, redirect them to the dashboard
+  if (userId && isPublicRoute(req)) {
+    const dashboardUrl = new URL("/dashboard", req.url);
+    return Response.redirect(dashboardUrl);
+  }
+
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    if (!userId) {
+      // User is not authenticated, redirect to login
+      const loginUrl = new URL("/login", req.url);
+      loginUrl.searchParams.set("redirect_url", req.url);
+      return Response.redirect(loginUrl);
+    }
+
+    // Check for pro status
+    const isPro = sessionClaims?.publicMetadata?.isPro === true;
+
+    if (!isPro) {
+      // User is not a pro member, redirect to pricing page
+      const pricingUrl = new URL("/pricing", req.url);
+      return Response.redirect(pricingUrl);
+    }
   }
 });
 

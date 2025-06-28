@@ -82,7 +82,7 @@ export default function Pricing() {
               <div className="p-8 bg-[#352D7F] text-white rounded-xl relative overflow-hidden">
                 <div className="absolute inset-0 bg-noise opacity-[0.15] pointer-events-none"></div>
                 <div className="relative">
-                  <div className="absolute top-0 right-0 bg-white text-[#352D7F] font-semibold text-xs px-3 py-1 rounded-full">
+                  <div className="absolute top-0 right-0 bg-white text-[#352D7F] font-semibold text-xs px-3 py-1 rounded-full font-sans">
                     Most Popular
                   </div>
                   <Sparkles className="w-8 h-8 mb-4" />

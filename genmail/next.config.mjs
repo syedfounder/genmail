@@ -23,7 +23,8 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        // Apply security headers to pages, but exclude static assets
+        source: "/((?!_next/static|_next/image|favicon.ico).*)",
         headers: [
           {
             key: "X-Frame-Options",
@@ -45,8 +46,8 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value:
               process.env.NODE_ENV === "development"
-                ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* https://*.clerk.accounts.dev https://*.clerk.com https://*.clerk.dev; style-src 'self' 'unsafe-inline' https://*.clerk.com https://*.clerk.dev; img-src 'self' data: https://*.supabase.co https://*.clerk.com https://*.clerk.dev; connect-src 'self' http://localhost:* https://*.supabase.co https://*.clerk.com https://*.clerk.dev wss://*.clerk.dev; frame-src 'self' http://localhost:* https://*.clerk.accounts.dev https://*.clerk.com https://*.clerk.dev https://challenges.cloudflare.com; frame-ancestors 'self';"
-                : "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.clerk.com https://*.clerk.dev; style-src 'self' 'unsafe-inline' https://*.clerk.com https://*.clerk.dev; img-src 'self' data: https://*.supabase.co https://*.clerk.com https://*.clerk.dev; connect-src 'self' https://*.supabase.co https://*.clerk.com https://*.clerk.dev wss://*.clerk.dev; frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://*.clerk.dev https://challenges.cloudflare.com; frame-ancestors 'self';",
+                ? "default-src 'self'; worker-src 'self' blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* https://*.clerk.accounts.dev https://*.clerk.com https://*.clerk.dev https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://*.clerk.com https://*.clerk.dev; img-src 'self' data: https://*.supabase.co https://*.clerk.com https://*.clerk.dev; connect-src 'self' http://localhost:* https://*.supabase.co https://*.clerk.com https://*.clerk.dev wss://*.clerk.dev https://*.clerk.accounts.dev https://clerk-telemetry.com; frame-src 'self' http://localhost:* https://*.clerk.accounts.dev https://*.clerk.com https://*.clerk.dev https://challenges.cloudflare.com; frame-ancestors 'self';"
+                : "default-src 'self'; worker-src 'self' blob:; script-src 'self' 'unsafe-inline' https://*.clerk.com https://*.clerk.dev https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://*.clerk.com https://*.clerk.dev; img-src 'self' data: https://*.supabase.co https://*.clerk.com https://*.clerk.dev; connect-src 'self' https://*.supabase.co https://*.clerk.com https://*.clerk.dev wss://*.clerk.dev https://*.clerk.accounts.dev https://clerk-telemetry.com; frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://*.clerk.dev https://challenges.cloudflare.com; frame-ancestors 'self';",
           },
         ],
       },

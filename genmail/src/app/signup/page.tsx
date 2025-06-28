@@ -16,8 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
 import Link from "next/link";
-import { OAuthStrategy } from "@clerk/types";
-import Image from "next/image";
+import ShineBorder from "@/components/ui/ShineBorder";
 
 export default function SignupPage() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -30,21 +29,6 @@ export default function SignupPage() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
-  const handleOAuthSignUp = async (strategy: OAuthStrategy) => {
-    if (!isLoaded) return;
-    try {
-      await signUp.authenticateWithRedirect({
-        strategy,
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/dashboard",
-      });
-    } catch (err: any) {
-      setError(
-        err.errors?.[0]?.longMessage || `Error signing up with ${strategy}`
-      );
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,63 +163,6 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-muted-foreground font-sans">
-              Register with
-            </Label>
-            <div className="grid grid-cols-3 gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handleOAuthSignUp("oauth_google")}
-                className="font-sans"
-              >
-                <Image
-                  src="/google.svg"
-                  alt="Google logo"
-                  width={20}
-                  height={20}
-                />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleOAuthSignUp("oauth_github")}
-                className="font-sans"
-              >
-                <Image
-                  src="/github.svg"
-                  alt="GitHub logo"
-                  width={20}
-                  height={20}
-                  className="dark:invert"
-                />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleOAuthSignUp("oauth_apple")}
-                className="font-sans"
-              >
-                <Image
-                  src="/apple.svg"
-                  alt="Apple logo"
-                  width={20}
-                  height={20}
-                  className="dark:invert"
-                />
-              </Button>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground font-sans">
-                Or
-              </span>
-            </div>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm rounded-lg p-3 text-center font-sans">
@@ -318,13 +245,15 @@ export default function SignupPage() {
                 Minimum length is 8 characters.
               </p>
             </div>
-            <Button
-              type="submit"
-              className="w-full font-sans bg-[#372F84] text-white hover:bg-[#372F84]/90 text-base py-6"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating Account..." : "Sign Up"}
-            </Button>
+            <ShineBorder>
+              <Button
+                type="submit"
+                className="w-full font-sans bg-[#372F84] text-white hover:bg-[#372F84]/90 text-base py-6"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </Button>
+            </ShineBorder>
           </form>
           <p className="text-center text-sm text-muted-foreground font-sans">
             By creating an account, you agree to the{" "}

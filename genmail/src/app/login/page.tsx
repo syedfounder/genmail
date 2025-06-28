@@ -1,8 +1,8 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
+import { useSignIn, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,12 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
 import Link from "next/link";
-import { OAuthStrategy } from "@clerk/types";
-import Image from "next/image";
+import ShineBorder from "@/components/ui/ShineBorder";
 
 type View = "sign-in" | "forgot-password-email" | "forgot-password-code";
 
 export default function LoginPage() {
+  const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded, signIn, setActive } = useSignIn();
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
@@ -32,20 +32,11 @@ export default function LoginPage() {
   const [view, setView] = useState<View>("sign-in");
   const router = useRouter();
 
-  const handleOAuthSignIn = async (strategy: OAuthStrategy) => {
-    if (!isLoaded) return;
-    try {
-      await signIn.authenticateWithRedirect({
-        strategy,
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/dashboard",
-      });
-    } catch (err: any) {
-      setError(
-        err.errors?.[0]?.longMessage || `Error signing in with ${strategy}`
-      );
+  useEffect(() => {
+    if (isUserLoaded && user) {
+      router.push("/dashboard");
     }
-  };
+  }, [isUserLoaded, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,10 +54,14 @@ export default function LoginPage() {
         await setActive({ session: result.createdSessionId });
         router.push("/dashboard");
       } else {
+        console.error("Sign-in incomplete", result);
         setError("Invalid email or password.");
       }
     } catch (err: any) {
-      setError(err.errors[0]?.longMessage || "An error occurred during login.");
+      console.error("Login error:", err);
+      setError(
+        err.errors?.[0]?.longMessage || "An error occurred during login."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +166,7 @@ export default function LoginPage() {
           <CardFooter className="flex justify-center">
             <button
               onClick={() => setView("sign-in")}
-              className="text-sm text-muted-foreground hover:text-[#372F84]"
+              className="text-sm text-muted-foreground hover:text-[#372F84] font-sans"
             >
               Back to Login
             </button>
@@ -252,7 +247,7 @@ export default function LoginPage() {
           <CardFooter className="flex justify-center">
             <button
               onClick={() => setView("sign-in")}
-              className="text-sm text-muted-foreground hover:text-[#000000] dark:text-[#ffffff]"
+              className="text-sm text-muted-foreground hover:text-[#000000] dark:text-[#ffffff] font-sans"
             >
               Back to Login
             </button>
@@ -274,123 +269,76 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-muted-foreground font-sans">
-              Login with
-            </Label>
-            <div className="grid grid-cols-3 gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handleOAuthSignIn("oauth_google")}
-                className="font-sans"
-              >
-                <Image
-                  src="/google.svg"
-                  alt="Google logo"
-                  width={20}
-                  height={20}
-                />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleOAuthSignIn("oauth_github")}
-                className="font-sans"
-              >
-                <Image
-                  src="/github.svg"
-                  alt="GitHub logo"
-                  width={20}
-                  height={20}
-                  className="dark:invert"
-                />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleOAuthSignIn("oauth_apple")}
-                className="font-sans"
-              >
-                <Image
-                  src="/apple.svg"
-                  alt="Apple logo"
-                  width={20}
-                  height={20}
-                  className="dark:invert"
-                />
-              </Button>
+          {isUserLoaded && user ? (
+            <div className="text-center text-muted-foreground font-sans p-4 bg-secondary rounded-lg">
+              You are already signed in. Redirecting to dashboard...
             </div>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground font-sans">
-                Or
-              </span>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-destructive/10 text-destructive text-sm rounded-lg p-3 text-center font-sans">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label
-                htmlFor="email"
-                className="font-sans text-muted-foreground"
-              >
-                Email address
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={emailAddress}
-                onChange={(e) => setEmailAddress(e.target.value)}
-                className="font-sans"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="bg-destructive/10 text-destructive text-sm rounded-lg p-3 text-center font-sans">
+                  {error}
+                </div>
+              )}
+              <div className="space-y-2">
                 <Label
-                  htmlFor="password"
+                  htmlFor="email"
                   className="font-sans text-muted-foreground"
                 >
-                  Password
+                  Email address
                 </Label>
-                <button
-                  type="button"
-                  onClick={() => setView("forgot-password-email")}
-                  className="text-xs font-sans text-[#000000] dark:text-[#ffffff] hover:underline"
-                >
-                  Forgot password?
-                </button>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={emailAddress}
+                  onChange={(e) => setEmailAddress(e.target.value)}
+                  className="font-sans"
+                />
               </div>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="font-sans"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full font-sans bg-[#372F84] text-white hover:bg-[#372F84]/90 text-base py-6"
-              disabled={isLoading}
-            >
-              {isLoading ? "Logging In..." : "Login"}
-            </Button>
-          </form>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Label
+                    htmlFor="password"
+                    className="font-sans text-muted-foreground"
+                  >
+                    Password
+                  </Label>
+                  <p className="text-xs text-muted-foreground font-sans">
+                    Forgot password?{" "}
+                    <button
+                      type="button"
+                      onClick={() => setView("forgot-password-email")}
+                      className="font-semibold text-[#372F84] hover:underline"
+                    >
+                      Reset it
+                    </button>
+                  </p>
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="font-sans"
+                />
+              </div>
+              <ShineBorder>
+                <Button
+                  type="submit"
+                  className="w-full font-sans bg-[#372F84] text-white hover:bg-[#372F84]/90 text-base py-6"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Login"}
+                </Button>
+              </ShineBorder>
+            </form>
+          )}
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground font-sans">
