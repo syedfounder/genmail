@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import InboxViewer from "@/components/InboxViewer";
-import supabase from "@/lib/supabaseClient";
+import supabase from "@/lib/supabase-simple";
 import SeoContent from "@/components/SeoContent";
 import HowItWorks from "@/components/HowItWorks";
 import Pricing from "@/components/Pricing";

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import supabase from "@/lib/supabaseClient";
+import supabase from "@/lib/supabase-simple";
 import { useUser } from "@clerk/nextjs";
 import { Mail, Inbox, ChevronLeft, Trash2, Lock } from "lucide-react";
 import {

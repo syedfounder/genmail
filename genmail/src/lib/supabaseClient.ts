@@ -31,12 +31,7 @@ function getSupabaseClient(): SupabaseClient {
     return _supabase;
   }
 
-  // Only initialize on the client side to avoid build-time issues
-  if (typeof window === "undefined") {
-    throw new Error(
-      "Supabase client can only be initialized on the client side"
-    );
-  }
+  // Allow initialization on both client and server side
 
   // Supabase configuration
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -76,3 +71,18 @@ export const supabase = new Proxy({} as SupabaseClient, {
 
 // Export the client as default for convenience
 export default supabase;
+
+// Service client for server-side operations (like webhooks)
+// This uses the service role key for admin operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+export const supabaseServiceClient =
+  supabaseUrl && serviceKey
+    ? createClient(supabaseUrl, serviceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      })
+    : null;

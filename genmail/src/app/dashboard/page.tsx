@@ -39,7 +39,7 @@ import Link from "next/link";
 import { useInboxStore } from "@/lib/inbox-store";
 import { NewMailboxSheet } from "@/components/NewMailboxSheet";
 import { toast } from "sonner";
-import supabase from "@/lib/supabaseClient";
+import supabase from "@/lib/supabase-simple";
 
 function timeAgo(date: string) {
   const seconds = Math.floor(

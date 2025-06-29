@@ -5,7 +5,19 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Loader2 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import {
+  createCheckoutSession,
+  useSubscription,
+  isPremiumUser,
+} from "@/lib/subscription";
+import { toast } from "sonner";
+
+// This should be set in your environment variables.
+// For local development, create a .env.local file in the /genmail directory
+// and add: NEXT_PUBLIC_STRIPE_PRO_PRICE_ID=your_stripe_test_price_id
+const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "";
 
 const freeFeatures = [
   "1 disposable inbox",
@@ -31,10 +43,38 @@ const proFeatures = [
 export default function Pricing() {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { isSignedIn } = useUser();
+  const subscription = useSubscription();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleUpgrade = async () => {
+    if (!isSignedIn) {
+      // Redirect to sign up if not authenticated
+      window.location.href = "/signup";
+      return;
+    }
+
+    if (isPremiumUser(subscription)) {
+      toast.info("You're already on the Pro plan!");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await createCheckoutSession(proPriceId);
+    } catch (error) {
+      console.error("Error starting checkout:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred.";
+      toast.error(`Checkout Error: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <ThemeProvider
@@ -136,8 +176,21 @@ export default function Pricing() {
                         <Button
                           variant="default"
                           className="font-sans w-full mb-0 bg-white hover:bg-gray-100 text-[#352D7F] font-bold tracking-tight"
+                          onClick={handleUpgrade}
+                          disabled={isLoading || !proPriceId}
                         >
-                          Get Full Access
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : isPremiumUser(subscription) ? (
+                            "You're on this plan"
+                          ) : !proPriceId ? (
+                            "Temporarily Unavailable"
+                          ) : (
+                            "Get Full Access"
+                          )}
                         </Button>
                       </div>
                     </div>

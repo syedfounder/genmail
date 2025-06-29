@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useSubscription, isPremiumUser } from "@/lib/subscription";
 import {
   Card,
   CardContent,
@@ -25,14 +26,17 @@ import {
   Settings,
 } from "lucide-react";
 import { toast } from "sonner";
+import { BillingCard } from "@/components/BillingCard";
 
 export default function SettingsPage() {
   const { user } = useUser();
+  const subscription = useSubscription();
+  const isProUser = isPremiumUser(subscription);
   const [mounted, setMounted] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,
     downloadFormat: "eml",
-    maxInboxes: 10,
+    maxInboxes: isProUser ? 10 : 1,
   });
 
   useEffect(() => {
@@ -157,6 +161,9 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Billing & Subscription */}
+      <BillingCard />
+
       {/* Account Limits */}
       <Card>
         <CardHeader>
@@ -173,20 +180,32 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Subscription</span>
-                <Badge variant="outline">Free Plan</Badge>
+                <Badge variant={isProUser ? "default" : "outline"}>
+                  {isProUser ? "Pro Plan" : "Free Plan"}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Maximum inboxes</span>
                 <span className="text-sm text-muted-foreground">
-                  {settings.maxInboxes}
+                  {isProUser ? "10" : "1"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Inbox lifetime</span>
                 <span className="text-sm text-muted-foreground">
-                  Up to 1 week
+                  {isProUser ? "Customizable (1h, 24h, 1 week)" : "10 minutes"}
                 </span>
               </div>
+              {isProUser && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Status</span>
+                  <span className="text-sm text-green-600">
+                    {subscription.subscriptionStatus === "active"
+                      ? "Active"
+                      : subscription.subscriptionStatus}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
