@@ -1,8 +1,5 @@
 "use client";
 
-// Force dynamic rendering to prevent static generation issues
-export const dynamic = "force-dynamic";
-
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useSubscription, isPremiumUser } from "@/lib/subscription";

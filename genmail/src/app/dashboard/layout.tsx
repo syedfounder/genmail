@@ -1,14 +1,11 @@
 "use client";
 
-// Force dynamic rendering to prevent static generation issues
-export const dynamic = "force-dynamic";
-
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { useInboxStore } from "@/lib/inbox-store";
 import { Mail, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserNav } from "@/components/UserNav";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -29,19 +26,23 @@ export default function DashboardLayout({
     <>
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent side="left" className="p-0 w-72 bg-background border-r-0">
-          <DashboardSidebar
-            isCollapsed={false}
-            setIsCollapsed={() => {}}
-            isMobile={true}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <DashboardSidebar
+              isCollapsed={false}
+              setIsCollapsed={() => {}}
+              isMobile={true}
+            />
+          </Suspense>
         </SheetContent>
       </Sheet>
       <div className="flex min-h-screen bg-secondary/30">
         <div className="hidden md:block">
-          <DashboardSidebar
-            isCollapsed={isCollapsed}
-            setIsCollapsed={setIsCollapsed}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <DashboardSidebar
+              isCollapsed={isCollapsed}
+              setIsCollapsed={setIsCollapsed}
+            />
+          </Suspense>
         </div>
         <div
           className={`flex-1 flex flex-col transition-all duration-300 ${
