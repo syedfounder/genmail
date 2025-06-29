@@ -79,7 +79,7 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const supabaseServiceClient =
   supabaseUrl && serviceKey
-    ? createClient(supabaseUrl, serviceKey, {
+    ? createClient(validateSupabaseUrl(supabaseUrl), serviceKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
