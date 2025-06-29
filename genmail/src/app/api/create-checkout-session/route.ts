@@ -70,6 +70,9 @@ export async function POST(request: NextRequest) {
         successUrl ||
         `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+      // This is the crucial part that was missing.
+      // It ensures the subscription object created by Stripe
+      // will have the userId in its metadata.
       subscription_data: {
         metadata: {
           userId,
