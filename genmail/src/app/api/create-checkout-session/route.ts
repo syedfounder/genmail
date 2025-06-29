@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       },
       success_url:
         successUrl ||
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?checkout=success`,
       cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       // This is the crucial part that was missing.
       // It ensures the subscription object created by Stripe

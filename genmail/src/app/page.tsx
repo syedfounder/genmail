@@ -153,9 +153,9 @@ export default function Home() {
             </Link>
           </div>
           {/* Tagline */}
-          <h1 className="font-sans text-4xl sm:text-5xl md:text-[60px] font-semibold tracking-tighter mb-6 leading-tight">
+          <h1 className="text-4xl font-sans sm:text-5xl md:text-[60px] font-semibold tracking-tighter mb-6 leading-tight">
             Private, Temporary Email
-            <br />{" "}
+            <br className="hidden md:block" />{" "}
             <span className="text-black dark:text-white">in 1 Click</span>
           </h1>
 

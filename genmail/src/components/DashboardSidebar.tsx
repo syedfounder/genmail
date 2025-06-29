@@ -12,12 +12,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useInboxStore } from "@/lib/inbox-store";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useSession } from "@clerk/nextjs";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
 interface DashboardSidebarProps {
   isCollapsed: boolean;
@@ -31,17 +31,30 @@ const DashboardSidebar = ({
   isMobile = false,
 }: DashboardSidebarProps) => {
   const { user } = useUser();
+  const { session } = useSession();
   const { inboxes, fetchInboxes } = useInboxStore();
   const [searchQuery, setSearchQuery] = useState("");
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Using the validated Supabase client
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // This is the crucial part to fix the stale session issue.
+  // When a user returns from a successful checkout, we reload the session.
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      session?.reload();
+      // Optional: remove the query param from the URL for a cleaner look
+      router.replace(pathname);
+    }
+  }, [searchParams, session, pathname, router]);
 
   useEffect(() => {
     if (user && inboxes.length === 0) {
