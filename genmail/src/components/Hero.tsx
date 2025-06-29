@@ -18,7 +18,7 @@ export default function Hero() {
         </div>
       </Link>
 
-      <h1 className="text-2xl sm:text-4xl md:text-7xl font-serif mb-6 leading-tight font-bold">
+      <h1 className="text-2xl sm:text-4xl md:text-7xl font-sans mb-6 leading-tight font-semibold tracking-tighter">
         Private,
         <br />
         Temporary Email
