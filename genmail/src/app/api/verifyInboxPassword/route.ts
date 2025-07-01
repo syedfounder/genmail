@@ -7,41 +7,61 @@ import { getClientIP } from "@/lib/utils";
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = "force-dynamic";
 
+// Simple in-memory rate limiting for password verification
+const rateLimitMap = new Map<string, { count: number; firstAttempt: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_ATTEMPTS = 10;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record) {
+    rateLimitMap.set(ip, { count: 1, firstAttempt: now });
+    return false;
+  }
+
+  // Reset if window has passed
+  if (now - record.firstAttempt > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, firstAttempt: now });
+    return false;
+  }
+
+  // Increment count
+  record.count++;
+
+  // Clean up old entries periodically
+  if (rateLimitMap.size > 1000) {
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (now - value.firstAttempt > RATE_LIMIT_WINDOW) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }
+
+  return record.count > RATE_LIMIT_MAX_ATTEMPTS;
+}
+
 export async function POST(request: NextRequest) {
   console.log("--- [API /api/verifyInboxPassword] Starting verification ---");
 
   try {
     const clientIP = getClientIP(request);
 
-    // Initialize Supabase Admin Client
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Rate limit check
-    const { data: isLimited, error: rateLimitError } = await supabaseAdmin.rpc(
-      "is_rate_limited",
-      {
-        p_event_type: "verify_password_attempt",
-        p_key: clientIP,
-        p_limit_count: 10, // 10 attempts
-        p_time_window: "1 minute", // per minute
-      }
-    );
-
-    if (rateLimitError) {
-      console.error("Rate limiting check failed:", rateLimitError);
-      // Fail open in case of database error
-    }
-
-    if (isLimited) {
+    // Simple rate limiting check
+    if (isRateLimited(clientIP)) {
       console.warn(`Rate limit exceeded for IP: ${clientIP}`);
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 }
       );
     }
+
+    // Initialize Supabase Admin Client
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     // Debug: Check if auth() works
     console.log("Attempting to get auth...");
