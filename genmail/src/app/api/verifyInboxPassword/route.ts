@@ -30,9 +30,11 @@ function isRateLimited(ip: string): boolean {
   // Increment count
   record.count++;
 
-  // Clean up old entries periodically
+  // Clean up old entries periodically - using Array.from for compatibility
   if (rateLimitMap.size > 1000) {
-    for (const [key, value] of rateLimitMap.entries()) {
+    const entries = Array.from(rateLimitMap.entries());
+    for (let i = 0; i < entries.length; i++) {
+      const [key, value] = entries[i];
       if (now - value.firstAttempt > RATE_LIMIT_WINDOW) {
         rateLimitMap.delete(key);
       }
