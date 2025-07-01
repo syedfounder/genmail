@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import supabase from "@/lib/supabase-simple";
 import {
   Inbox,
   Settings,
@@ -40,8 +39,6 @@ const DashboardSidebar = ({
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Using the validated Supabase client
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -58,7 +55,7 @@ const DashboardSidebar = ({
 
   useEffect(() => {
     if (user && inboxes.length === 0) {
-      fetchInboxes(user.id, supabase);
+      fetchInboxes();
     }
   }, [user, inboxes.length, fetchInboxes]);
 

@@ -22,21 +22,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "@clerk/nextjs";
-import { useState, useEffect } from "react";
-import {
-  PlusCircle,
-  Inbox,
-  Copy,
-  ExternalLink,
-  RefreshCw,
-  Trash2,
-  Lock,
-} from "lucide-react";
-import Link from "next/link";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { PlusCircle, Inbox, Copy, RefreshCw, Trash2, Lock } from "lucide-react";
 import { useInboxStore } from "@/lib/inbox-store";
 import { NewMailboxSheet } from "@/components/NewMailboxSheet";
 import { toast } from "sonner";
-import supabase from "@/lib/supabase-simple";
 
 function timeAgo(date: string) {
   const seconds = Math.floor(
@@ -95,8 +86,130 @@ function timeUntil(date: string) {
   return `in ${Math.floor(seconds)} seconds`;
 }
 
+function PaymentSuccessBanner() {
+  const { user } = useUser();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [isPolling, setIsPolling] = useState(false);
+  const [pollingComplete, setPollingComplete] = useState(false);
+
+  const isPaymentSuccess =
+    searchParams.get("payment_success") === "true" ||
+    searchParams.get("success") === "true";
+
+  useEffect(() => {
+    if (!isPaymentSuccess || !user || pollingComplete) return;
+
+    // Check if already pro (webhook was very fast)
+    const metadata = user.publicMetadata as {
+      isPro?: boolean;
+      subscriptionTier?: string;
+      subscriptionStatus?: string;
+    };
+    const isAlreadyPro =
+      metadata?.isPro === true ||
+      (metadata?.subscriptionTier === "premium" &&
+        metadata?.subscriptionStatus === "active");
+
+    if (isAlreadyPro) {
+      // Already pro! Clean URL immediately
+      setPollingComplete(true);
+      const cleanUrl = window.location.pathname;
+      router.replace(cleanUrl);
+      toast.success("Welcome to GenMail Pro! Your subscription is active.");
+      return;
+    }
+
+    setIsPolling(true);
+
+    const pollSubscriptionStatus = async () => {
+      try {
+        // Force reload user data to get latest subscription status
+        await user.reload();
+
+        const metadata = user.publicMetadata as {
+          isPro?: boolean;
+          subscriptionTier?: string;
+          subscriptionStatus?: string;
+        };
+        const isPro =
+          metadata?.isPro === true ||
+          (metadata?.subscriptionTier === "premium" &&
+            metadata?.subscriptionStatus === "active");
+
+        if (isPro) {
+          // Subscription is now active! Clean up URL and stop polling
+          setPollingComplete(true);
+          setIsPolling(false);
+
+          // Clean the URL by removing success parameters
+          const cleanUrl = window.location.pathname;
+          router.replace(cleanUrl);
+
+          toast.success(
+            "Welcome to GenMail Pro! Your subscription is now active."
+          );
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error polling subscription status:", error);
+        return false;
+      }
+    };
+
+    // Poll immediately, then every 2 seconds for up to 30 seconds
+    let pollCount = 0;
+    const maxPolls = 15; // 30 seconds max
+
+    const pollInterval = setInterval(async () => {
+      const success = await pollSubscriptionStatus();
+      pollCount++;
+
+      if (success || pollCount >= maxPolls) {
+        clearInterval(pollInterval);
+        if (!success) {
+          // Polling timed out
+          setIsPolling(false);
+          toast.error(
+            "Subscription activation is taking longer than expected. Please refresh the page or contact support."
+          );
+        }
+      }
+    }, 2000);
+
+    // Initial poll
+    pollSubscriptionStatus();
+
+    return () => clearInterval(pollInterval);
+  }, [isPaymentSuccess, user, router, pollingComplete]);
+
+  if (!isPaymentSuccess || pollingComplete) return null;
+
+  return (
+    <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+      <div className="flex items-center gap-3">
+        {isPolling && (
+          <RefreshCw className="h-5 w-5 text-green-600 animate-spin" />
+        )}
+        <div>
+          <h3 className="font-semibold text-green-800 dark:text-green-200">
+            Payment Successful!
+          </h3>
+          <p className="text-sm text-green-700 dark:text-green-300">
+            {isPolling
+              ? "Activating your Pro subscription... This may take a few moments."
+              : "Your subscription is being processed."}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user } = useUser();
+  const router = useRouter();
   const { inboxes, fetchInboxes, deleteInbox } = useInboxStore();
   const [loading, setLoading] = useState(true);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -111,7 +224,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       setLoading(true);
-      fetchInboxes(user.id, supabase).finally(() => setLoading(false));
+      fetchInboxes().finally(() => setLoading(false));
     }
   }, [user, fetchInboxes]);
 
@@ -190,6 +303,9 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 font-sans">
+      <Suspense fallback={null}>
+        <PaymentSuccessBanner />
+      </Suspense>
       <NewMailboxSheet open={isSheetOpen} onOpenChange={setIsSheetOpen} />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -265,11 +381,9 @@ export default function DashboardPage() {
             variant="outline"
             size="icon"
             onClick={() => {
-              if (user && supabase) {
+              if (user) {
                 setLoading(true);
-                fetchInboxes(user.id, supabase).finally(() =>
-                  setLoading(false)
-                );
+                fetchInboxes().finally(() => setLoading(false));
               }
             }}
             disabled={loading}
@@ -287,6 +401,65 @@ export default function DashboardPage() {
             <PlusCircle className="mr-2 h-4 w-4 text-white" />
             New Inbox
           </Button>
+        </div>
+      </div>
+
+      {/* Analytics Card */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-background border rounded-lg p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-3xl font-bold font-sans text-foreground mb-1">
+                {inboxes.length}
+              </p>
+              <p className="text-sm text-muted-foreground">Total Inboxes</p>
+            </div>
+            <Inbox className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </div>
+
+        <div className="bg-background border rounded-lg p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-3xl font-bold font-sans text-foreground mb-1">
+                {
+                  inboxes.filter(
+                    (inbox) => new Date(inbox.expires_at) > new Date()
+                  ).length
+                }
+              </p>
+              <p className="text-sm text-muted-foreground">Active Inboxes</p>
+            </div>
+            <div className="w-5 h-5 flex items-center justify-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-background border rounded-lg p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-3xl font-bold font-sans text-foreground mb-1">
+                {inboxes.filter((inbox) => inbox.password_hash).length}
+              </p>
+              <p className="text-sm text-muted-foreground">Protected Inboxes</p>
+            </div>
+            <Lock className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </div>
+
+        <div className="bg-background border rounded-lg p-6 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-3xl font-bold font-sans text-foreground mb-1">
+                {inboxes.filter((inbox) => inbox.custom_name).length}
+              </p>
+              <p className="text-sm text-muted-foreground">With Labels</p>
+            </div>
+            <div className="w-5 h-5 flex items-center justify-center">
+              <div className="w-3 h-3 bg-purple-500 rounded-sm"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -311,7 +484,11 @@ export default function DashboardPage() {
               </TableRow>
             ) : inboxes.length > 0 ? (
               inboxes.map((inbox) => (
-                <TableRow key={inbox.id}>
+                <TableRow
+                  key={inbox.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => router.push(`/dashboard/inbox/${inbox.id}`)}
+                >
                   <TableCell className="font-mono text-sm">
                     <div className="flex items-center gap-2">
                       <span>{inbox.email_address}</span>
@@ -321,7 +498,10 @@ export default function DashboardPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => copyToClipboard(inbox.email_address)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard(inbox.email_address);
+                        }}
                       >
                         <Copy className="h-4 w-4 text-muted-foreground" />
                       </Button>
@@ -329,10 +509,7 @@ export default function DashboardPage() {
                   </TableCell>
                   <TableCell className="text-sm">
                     {inbox.custom_name ? (
-                      <span
-                        className="inline-block px-2 py-1 text-xs font-semibold text-white rounded-md"
-                        style={{ backgroundColor: "#372F84" }}
-                      >
+                      <span className="inline-block px-2 py-1 text-xs font-medium bg-purple-500/20 text-purple-700 dark:bg-purple-500/30 dark:text-purple-300 rounded-md">
                         {inbox.custom_name}
                       </span>
                     ) : (
@@ -345,22 +522,16 @@ export default function DashboardPage() {
                     {timeAgo(inbox.created_at)}
                   </TableCell>
                   <TableCell className="text-sm">
-                    <span className="text-xs text-muted-foreground ml-2 px-2 py-0.5 rounded-full bg-muted border border-border">
+                    <span className="text-xs px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
                       {timeUntil(inbox.expires_at)}
                     </span>
-                    {inbox.password_hash && (
-                      <span className="text-xs text-muted-foreground ml-2 px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 flex items-center gap-1">
-                        <Lock className="h-3 w-3" />
-                        Protected
-                      </span>
-                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      className={`px-2 py-1 text-xs font-semibold rounded-full border ${
                         new Date(inbox.expires_at) > new Date()
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-                          : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
+                          ? "border-green-500 text-green-600 dark:border-green-400 dark:text-green-400"
+                          : "border-red-500 text-red-600 dark:border-red-400 dark:text-red-400"
                       }`}
                     >
                       {new Date(inbox.expires_at) > new Date()
@@ -370,18 +541,13 @@ export default function DashboardPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link
-                          href={`/dashboard/inbox/${inbox.id}`}
-                          className="flex items-center gap-2"
-                        >
-                          View Inbox <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openDeleteDialog(inbox)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteDialog(inbox);
+                        }}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -406,31 +572,6 @@ export default function DashboardPage() {
             )}
           </TableBody>
         </Table>
-      </div>
-
-      <div className="mt-12 p-8 bg-secondary/50 rounded-lg border border-dashed border-border text-center">
-        <h2 className="text-2xl font-semibold font-serif tracking-tight">
-          Feature Spotlight: Privacy First
-        </h2>
-        <p className="mt-2 text-muted-foreground max-w-xl mx-auto">
-          Remember, every inbox you create is completely anonymous. We
-          don&apos;t track your IP or store any personal information linking you
-          to an inbox.
-        </p>
-        <div className="mt-6 flex justify-center gap-6">
-          <div className="text-center">
-            <h3 className="text-3xl font-bold text-primary">100%</h3>
-            <p className="text-sm text-muted-foreground">Anonymous</p>
-          </div>
-          <div className="text-center">
-            <h3 className="text-3xl font-bold text-primary">0</h3>
-            <p className="text-sm text-muted-foreground">Logs Retained</p>
-          </div>
-          <div className="text-center">
-            <h3 className="text-3xl font-bold text-primary">24h</h3>
-            <p className="text-sm text-muted-foreground">Max Lifespan</p>
-          </div>
-        </div>
       </div>
     </div>
   );

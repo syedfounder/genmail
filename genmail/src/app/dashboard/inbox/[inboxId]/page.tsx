@@ -5,9 +5,16 @@ export const dynamic = "force-dynamic";
 
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import supabase from "@/lib/supabase-simple";
 import { useUser } from "@clerk/nextjs";
-import { Mail, Inbox, ChevronLeft, Trash2, Lock } from "lucide-react";
+import {
+  Mail,
+  Inbox,
+  ChevronLeft,
+  Trash2,
+  Lock,
+  RefreshCw,
+  Copy,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -126,6 +133,7 @@ export default function InboxPage() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -136,18 +144,23 @@ export default function InboxPage() {
 
   // Move fetchEmails outside useEffect so it can be called from handlePasswordSubmit
   const fetchEmails = useCallback(async () => {
-    const { data: emailsData, error: emailsError } = await supabase
-      .from("emails")
-      .select(
-        "id, from_address, subject, body, html_body, received_at, is_read"
-      )
-      .eq("inbox_id", inboxId)
-      .order("received_at", { ascending: false });
+    const response = await fetch(`/api/getInboxEmails?inboxId=${inboxId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    if (emailsError) {
+    if (!response.ok) {
       throw new Error("Failed to fetch emails for this inbox.");
     }
-    setEmails(emailsData || []);
+
+    const result = await response.json();
+    if (result.success) {
+      setEmails(result.emails || []);
+    } else {
+      throw new Error(result.error || "Failed to fetch emails for this inbox.");
+    }
   }, [inboxId]);
 
   useEffect(() => {
@@ -159,20 +172,32 @@ export default function InboxPage() {
       setIsUnlocked(false);
 
       try {
-        const { data: inboxData, error: inboxError } = await supabase
-          .from("inboxes")
-          .select("id, email_address, user_id, password_hash")
-          .eq("id", inboxId)
-          .single();
+        const response = await fetch(
+          `/api/getInboxDetails?inboxId=${inboxId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        if (inboxError || !inboxData) {
-          throw new Error("Could not find inbox or you don't have permission.");
+        if (!response.ok) {
+          const errorResult = await response.json();
+          throw new Error(
+            errorResult.error ||
+              "Could not find inbox or you don't have permission."
+          );
         }
 
-        if (inboxData.user_id !== user.id) {
-          throw new Error("Access denied. You do not own this inbox.");
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(
+            result.error || "Could not find inbox or you don't have permission."
+          );
         }
 
+        const inboxData = result.inbox;
         setInboxDetails(inboxData);
 
         if (!inboxData.password_hash) {
@@ -271,25 +296,54 @@ export default function InboxPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    if (!isUnlocked || refreshing) return;
+
+    setRefreshing(true);
+    try {
+      await fetchEmails();
+      toast.success("Emails refreshed!");
+    } catch (error) {
+      toast.error("Failed to refresh emails");
+      console.error("Refresh error:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const copyEmailAddress = () => {
+    if (inboxDetails?.email_address) {
+      navigator.clipboard.writeText(inboxDetails.email_address);
+      toast.success("Email address copied to clipboard!");
+    }
+  };
+
   const handleSelectEmail = async (email: Email) => {
     setSelectedEmail(email);
     if (!email.is_read) {
-      const { error } = await supabase
-        .from("emails")
-        .update({ is_read: true })
-        .eq("id", email.id);
+      try {
+        const response = await fetch("/api/markEmailAsRead", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ emailId: email.id }),
+        });
 
-      if (!error) {
-        setEmails(
-          emails.map((e) => (e.id === email.id ? { ...e, is_read: true } : e))
-        );
+        if (response.ok) {
+          setEmails(
+            emails.map((e) => (e.id === email.id ? { ...e, is_read: true } : e))
+          );
+        }
+      } catch (error) {
+        console.error("Failed to mark email as read:", error);
       }
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full font-sans">
         Loading inbox...
       </div>
     );
@@ -297,7 +351,7 @@ export default function InboxPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full text-red-500">
+      <div className="flex items-center justify-center h-full text-red-500 font-sans">
         Error: {error}
       </div>
     );
@@ -305,7 +359,7 @@ export default function InboxPage() {
 
   if (!inboxDetails) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full font-sans">
         Inbox not found.
       </div>
     );
@@ -387,23 +441,46 @@ export default function InboxPage() {
               <span className="sr-only">Back</span>
             </Button>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-foreground truncate">
+              <h1 className="text-xl font-medium text-foreground truncate">
                 {inboxDetails?.email_address}
               </h1>
               {inboxDetails?.password_hash && (
                 <Lock className="h-4 w-4 text-muted-foreground" />
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={copyEmailAddress}
+                className="h-6 w-6"
+                aria-label="Copy Email Address"
+              >
+                <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+              </Button>
             </div>
           </div>
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={() => setDeleteDialogOpen(true)}
-            className="h-8 w-8"
-            aria-label="Delete Inbox"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={!isUnlocked || refreshing}
+              className="h-8 w-8"
+              aria-label="Refresh Emails"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+            </Button>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => setDeleteDialogOpen(true)}
+              className="h-8 w-8"
+              aria-label="Delete Inbox"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

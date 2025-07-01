@@ -225,21 +225,23 @@ async function generateFileHash(file: File): Promise<string> {
 // Upload attachment to Supabase Storage
 async function uploadAttachment(
   file: File,
+  userId: string,
+  inboxId: string,
   emailId: string
-): Promise<{ storage_path: string; download_url: string } | null> {
+): Promise<{ storage_path: string } | null> {
   try {
-    // Generate unique filename
+    // Generate unique filename with timestamp
     const timestamp = Date.now();
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const fileName = `${emailId}/${timestamp}_${sanitizedName}`;
+    const storagePath = `${userId}/${inboxId}/${emailId}/${timestamp}_${sanitizedName}`;
 
     // Convert file to array buffer
     const fileContent = await file.arrayBuffer();
 
-    // Upload to Supabase Storage
+    // Upload to the correct email-attachments bucket
     const { data, error } = await supabase.storage
-      .from("attachments")
-      .upload(fileName, fileContent, {
+      .from("email-attachments")
+      .upload(storagePath, fileContent, {
         contentType: file.type,
         upsert: false,
       });
@@ -249,14 +251,8 @@ async function uploadAttachment(
       return null;
     }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("attachments")
-      .getPublicUrl(fileName);
-
     return {
-      storage_path: fileName,
-      download_url: urlData.publicUrl,
+      storage_path: storagePath,
     };
   } catch (error) {
     console.error("Attachment upload error:", error);
@@ -323,7 +319,9 @@ serve(async (req) => {
     // Find the inbox for this email address
     const { data: inbox, error: inboxError } = await supabase
       .from("inboxes")
-      .select("id, expires_at, is_active, current_email_count, max_emails")
+      .select(
+        "id, user_id, expires_at, is_active, current_email_count, max_emails"
+      )
       .eq("email_address", toAddress)
       .eq("is_active", true)
       .gte("expires_at", new Date().toISOString())
@@ -417,8 +415,13 @@ serve(async (req) => {
         const validation = validateAttachment(attachmentFile);
 
         if (validation.allowed) {
-          // Upload to storage
-          const uploadResult = await uploadAttachment(attachmentFile, emailId);
+          // Upload to storage (use 'anonymous' if user_id is null for legacy inboxes)
+          const uploadResult = await uploadAttachment(
+            attachmentFile,
+            inbox.user_id || "anonymous",
+            inbox.id,
+            emailId
+          );
 
           if (uploadResult) {
             // Generate file hash
@@ -435,7 +438,6 @@ serve(async (req) => {
                 file_size: attachmentFile.size,
                 file_hash: fileHash,
                 storage_path: uploadResult.storage_path,
-                download_url: uploadResult.download_url,
                 is_allowed: true,
               });
 
@@ -472,7 +474,6 @@ serve(async (req) => {
             file_size: attachmentFile.size,
             file_hash: fileHash,
             storage_path: "",
-            download_url: "",
             is_allowed: false,
             blocked_reason: validation.reason,
           });

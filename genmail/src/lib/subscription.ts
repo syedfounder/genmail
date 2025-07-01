@@ -50,7 +50,7 @@ export const createCheckoutSession = async (priceId: string) => {
       },
       body: JSON.stringify({
         priceId,
-        successUrl: `${window.location.origin}/dashboard?success=true`,
+        successUrl: `${window.location.origin}/dashboard?payment_success=true`,
         cancelUrl: `${window.location.origin}/pricing?canceled=true`,
       }),
     });

@@ -2,6 +2,8 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 interface PublicMetadata {
   isPro?: boolean;
+  subscriptionTier?: "free" | "premium";
+  subscriptionStatus?: string;
 }
 
 const isProtectedRoute = createRouteMatcher([
@@ -32,11 +34,38 @@ export default clerkMiddleware(async (auth, req) => {
       return Response.redirect(loginUrl);
     }
 
-    // Check for pro status
+    // Check for pro status - use same logic as subscription library
+    const metadata = sessionClaims?.publicMetadata as PublicMetadata;
     const isPro =
-      (sessionClaims?.publicMetadata as PublicMetadata)?.isPro === true;
+      metadata?.isPro === true ||
+      (metadata?.subscriptionTier === "premium" &&
+        metadata?.subscriptionStatus === "active");
 
-    if (!isPro) {
+    // Development override - bypass subscription check with cookie
+    const cookies = req.headers.get("cookie") || "";
+    const isDevOverride =
+      cookies.includes("dev_pro_override=true") &&
+      process.env.NODE_ENV === "development";
+
+    // Production: Allow temporary access after Stripe checkout while webhook processes
+    const url = new URL(req.url);
+    const isPaymentSuccess = url.searchParams.get("payment_success") === "true";
+    const isCheckoutSuccess = url.searchParams.get("success") === "true"; // Stripe default parameter
+    const hasPaymentParams = isPaymentSuccess || isCheckoutSuccess;
+
+    // Debug logging (remove in production)
+    if (req.url.includes("/dashboard")) {
+      console.log("[MIDDLEWARE DEBUG]", {
+        userId,
+        metadata,
+        isPro,
+        isDevOverride,
+        hasPaymentParams,
+        url: req.url,
+      });
+    }
+
+    if (!isPro && !isDevOverride && !hasPaymentParams) {
       // User is not a pro member, redirect to pricing page
       const pricingUrl = new URL("/pricing", req.url);
       return Response.redirect(pricingUrl);

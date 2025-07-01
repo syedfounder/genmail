@@ -100,6 +100,7 @@ async function handleCheckoutSessionCompleted(
       publicMetadata: {
         subscriptionStatus: "active",
         subscriptionTier: "premium",
+        isPro: true,
         stripeCustomerId: session.customer,
         stripeSubscriptionId: session.subscription,
       },
@@ -138,6 +139,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       publicMetadata: {
         subscriptionStatus: subscription.status,
         subscriptionTier,
+        isPro: isActive,
         stripeCustomerId: subscription.customer,
         stripeSubscriptionId: subscription.id,
       },
@@ -175,6 +177,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
       publicMetadata: {
         subscriptionStatus: "canceled",
         subscriptionTier: "free",
+        isPro: false,
         stripeCustomerId: subscription.customer,
         stripeSubscriptionId: null,
       },

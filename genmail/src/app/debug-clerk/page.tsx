@@ -1,247 +1,165 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export default function DebugClerk() {
-  const { user, isLoaded } = useUser();
-  const [mounted, setMounted] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<{
-    publishableKey?: string;
-    keyType?: string;
-    domain?: string;
-    protocol?: string;
-    nodeEnv?: string;
-    userLoaded?: boolean;
-    userExists?: boolean;
-    currentUrl?: string;
-  }>({});
+  const { user, isSignedIn } = useUser();
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-
-    // Gather debug information
-    const info = {
-      publishableKey:
-        process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.substring(0, 15) + "...",
-      keyType: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.startsWith(
-        "pk_live_"
-      )
-        ? "Production"
-        : process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.startsWith("pk_test_")
-        ? "Development"
-        : "Unknown",
-      domain: typeof window !== "undefined" ? window.location.host : "Server",
-      protocol:
-        typeof window !== "undefined" ? window.location.protocol : "Unknown",
-      nodeEnv: process.env.NODE_ENV,
-      userLoaded: isLoaded,
-      userExists: !!user,
-      currentUrl:
-        typeof window !== "undefined" ? window.location.href : "Server",
-    };
-
-    setDebugInfo(info);
-  }, [isLoaded, user]);
-
-  if (!mounted) {
-    return <div>Loading debug info...</div>;
+  if (!isSignedIn) {
+    return <div>Please sign in to view debug info</div>;
   }
 
+  const handleUpgradeToPro = async () => {
+    setIsUpdating(true);
+    try {
+      const response = await fetch("/api/test-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "upgrade_to_pro" }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Successfully upgraded to Pro! Refreshing session...");
+
+        // Set persistent development flag via cookie (accessible in middleware)
+        document.cookie = "dev_pro_override=true; path=/; max-age=86400"; // 24 hours
+
+        // Force user object to reload from server
+        await user?.reload();
+
+        // Add a longer delay to ensure session propagation
+        setTimeout(() => {
+          alert(
+            "Session refreshed! You now have Pro access - navigate anywhere!"
+          );
+          window.location.replace("/dashboard");
+        }, 1500);
+      } else {
+        throw new Error(data.error || "Failed to upgrade");
+      }
+    } catch (error) {
+      console.error("Error updating metadata:", error);
+      alert("Error updating subscription status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDowngradeToFree = async () => {
+    setIsUpdating(true);
+    try {
+      const response = await fetch("/api/test-auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "downgrade_to_free" }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Successfully downgraded to Free! Redirecting to pricing...");
+        // Remove development override cookie
+        document.cookie =
+          "dev_pro_override=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        window.location.href = "/pricing";
+      } else {
+        throw new Error(data.error || "Failed to downgrade");
+      }
+    } catch (error) {
+      console.error("Error updating metadata:", error);
+      alert("Error updating subscription status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">🔧 Clerk Debug Information</h1>
-
-        <div className="grid gap-6">
-          {/* Environment Check */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              Environment Variables
-            </h2>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-3 h-3 rounded-full ${
-                    debugInfo.publishableKey ? "bg-green-500" : "bg-red-500"
-                  }`}
-                ></span>
-                <strong>Publishable Key:</strong>{" "}
-                {debugInfo.publishableKey || "❌ NOT SET"}
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-3 h-3 rounded-full ${
-                    debugInfo.keyType === "Production"
-                      ? "bg-green-500"
-                      : debugInfo.keyType === "Development"
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                  }`}
-                ></span>
-                <strong>Key Type:</strong> {debugInfo.keyType}
-                {debugInfo.keyType === "Development" && (
-                  <span className="text-yellow-600 text-sm">
-                    (Should be Production for live site)
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-3 h-3 rounded-full ${
-                    debugInfo.nodeEnv === "production"
-                      ? "bg-green-500"
-                      : "bg-yellow-500"
-                  }`}
-                ></span>
-                <strong>NODE_ENV:</strong> {debugInfo.nodeEnv}
-              </div>
+    <div className="container mx-auto p-4 space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>🔍 User Debug Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <strong>User ID:</strong> {user?.id}
+            </div>
+            <div>
+              <strong>Email:</strong> {user?.primaryEmailAddress?.emailAddress}
+            </div>
+            <div>
+              <strong>Public Metadata:</strong>
+              <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded mt-2 text-sm overflow-auto">
+                {JSON.stringify(user?.publicMetadata, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <strong>Session Claims:</strong>
+              <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded mt-2 text-sm overflow-auto">
+                Available in middleware only
+              </pre>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Domain Check */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Domain Configuration</h2>
-            <div className="space-y-2">
-              <div>
-                <strong>Current Domain:</strong> {debugInfo.domain}
-              </div>
-              <div>
-                <strong>Protocol:</strong> {debugInfo.protocol}
-              </div>
-              <div>
-                <strong>Full URL:</strong> {debugInfo.currentUrl}
-              </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                ⚠️ Make sure this domain is added to your Clerk Dashboard →
-                Configure → Domain & URLs
-              </div>
-            </div>
-          </div>
-
-          {/* Clerk Status */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Clerk Status</h2>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-3 h-3 rounded-full ${
-                    debugInfo.userLoaded ? "bg-green-500" : "bg-red-500"
-                  }`}
-                ></span>
-                <strong>Clerk Loaded:</strong>{" "}
-                {debugInfo.userLoaded ? "✅ Yes" : "❌ No"}
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-3 h-3 rounded-full ${
-                    debugInfo.userExists ? "bg-green-500" : "bg-gray-500"
-                  }`}
-                ></span>
-                <strong>User Signed In:</strong>{" "}
-                {debugInfo.userExists
-                  ? "✅ Yes"
-                  : "➖ No (not required for this test)"}
-              </div>
-              {user && (
-                <div className="mt-2 p-2 bg-green-50 rounded">
-                  <strong>User Email:</strong>{" "}
-                  {user.primaryEmailAddress?.emailAddress}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Fix Instructions */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">🚨 Common Fixes</h2>
-
-            {debugInfo.keyType === "Development" && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <h3 className="font-semibold text-red-800 mb-2">
-                  ❌ Using Development Keys in Production
-                </h3>
-                <p className="text-sm text-red-700">
-                  You&apos;re using development Clerk keys (
-                  <code>pk_test_</code>) in production. You need to update your
-                  environment variables with production keys (
-                  <code>pk_live_</code>).
-                </p>
-                <div className="mt-2">
-                  <strong>Steps to fix:</strong>
-                  <ol className="list-decimal list-inside text-sm mt-1 space-y-1">
-                    <li>
-                      Go to{" "}
-                      <a
-                        href="https://dashboard.clerk.com"
-                        target="_blank"
-                        className="text-blue-600 underline"
-                      >
-                        Clerk Dashboard
-                      </a>
-                    </li>
-                    <li>Navigate to Configure → API Keys</li>
-                    <li>
-                      Copy your <strong>Production</strong> keys (pk_live_ and
-                      sk_live_)
-                    </li>
-                    <li>Update your Vercel/deployment environment variables</li>
-                    <li>Redeploy your application</li>
-                  </ol>
-                </div>
-              </div>
-            )}
-
-            {!debugInfo.publishableKey && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <h3 className="font-semibold text-red-800 mb-2">
-                  ❌ Missing Publishable Key
-                </h3>
-                <p className="text-sm text-red-700">
-                  <code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> environment
-                  variable is not set.
-                </p>
-              </div>
-            )}
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 mb-2">
-                📋 Environment Variables Needed
-              </h3>
-              <div className="text-sm space-y-1">
-                <div>
-                  <code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...</code>
-                </div>
-                <div>
-                  <code>CLERK_SECRET_KEY=sk_live_...</code>
-                </div>
-              </div>
-              <p className="text-sm text-blue-700 mt-2">
-                Also ensure <strong>{debugInfo.domain}</strong> is added to your
-                Clerk Dashboard → Domain & URLs
-              </p>
-            </div>
-          </div>
-
-          {/* Network Test */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Network Test</h2>
-            <p className="text-sm text-muted-foreground mb-2">
-              Open browser dev tools → Network tab and look for failed requests
-              to:
+      <Card>
+        <CardHeader>
+          <CardTitle>🧪 Development Testing Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground mb-4">
+              Since webhooks don&apos;t work in localhost, use these buttons to
+              manually test subscription states:
             </p>
-            <ul className="text-sm space-y-1">
-              <li>
-                • <code>*.clerk.com</code> - Should return 200
-              </li>
-              <li>
-                • <code>clerk.genmail.app</code> - Should return 200
-              </li>
-              <li>• Look for 400/401/403 errors</li>
-            </ul>
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                onClick={handleUpgradeToPro}
+                disabled={isUpdating}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isUpdating ? "Updating..." : "🚀 Simulate Pro Upgrade"}
+              </Button>
+              <Button
+                onClick={handleDowngradeToFree}
+                disabled={isUpdating}
+                variant="outline"
+              >
+                {isUpdating ? "Updating..." : "⬇️ Simulate Free Downgrade"}
+              </Button>
+              <Button
+                onClick={() => {
+                  document.cookie =
+                    "dev_pro_override=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                  alert(
+                    "Development override cleared! You&apos;ll now be treated as free tier."
+                  );
+                  window.location.reload();
+                }}
+                variant="secondary"
+                size="sm"
+              >
+                🧹 Clear Override
+              </Button>
+            </div>
+            <p className="text-xs text-orange-600">
+              ⚠️ This is for development testing only. In production, Stripe
+              webhooks handle this automatically.
+            </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { SupabaseClient } from "@supabase/supabase-js";
 
 interface Inbox {
   id: string;
@@ -16,7 +15,7 @@ interface InboxState {
   setInboxes: (inboxes: Inbox[]) => void;
   addInbox: (inbox: Inbox) => void;
   deleteInbox: (inboxId: string) => void;
-  fetchInboxes: (userId: string, supabase: SupabaseClient) => Promise<void>;
+  fetchInboxes: () => Promise<void>;
 }
 
 export const useInboxStore = create<InboxState>((set) => ({
@@ -27,25 +26,26 @@ export const useInboxStore = create<InboxState>((set) => ({
     set((state) => ({
       inboxes: state.inboxes.filter((inbox) => inbox.id !== inboxId),
     })),
-  fetchInboxes: async (userId, supabase) => {
+  fetchInboxes: async () => {
     try {
-      const { data, error } = await supabase
-        .from("inboxes")
-        .select(
-          "id, email_address, created_at, expires_at, is_active, password_hash, custom_name"
-        )
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+      const response = await fetch("/api/getInboxes", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      if (error) {
-        console.error("Error fetching inboxes:", error);
-        return;
+      if (!response.ok) {
+        throw new Error("Failed to fetch inboxes");
       }
 
-      const activeInboxes = (data || []).filter(
-        (inbox: Inbox) => new Date(inbox.expires_at) > new Date()
-      );
-      set({ inboxes: activeInboxes });
+      const result = await response.json();
+
+      if (result.success) {
+        set({ inboxes: result.inboxes });
+      } else {
+        console.error("Error fetching inboxes:", result.error);
+      }
     } catch (error) {
       console.error("Error in fetchInboxes:", error);
     }
