@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 
 interface PublicMetadata {
   isPro?: boolean;
@@ -17,6 +18,28 @@ const isProtectedRoute = createRouteMatcher([
 
 const isPublicRoute = createRouteMatcher(["/login", "/signup"]);
 
+async function getFreshUserMetadata(
+  userId: string
+): Promise<PublicMetadata | null> {
+  try {
+    const user = await (await clerkClient()).users.getUser(userId);
+    return user.publicMetadata as PublicMetadata;
+  } catch (error) {
+    console.error("Error fetching fresh user metadata:", error);
+    return null;
+  }
+}
+
+function isUserPro(metadata: PublicMetadata | null): boolean {
+  if (!metadata) return false;
+
+  return (
+    metadata.isPro === true ||
+    (metadata.subscriptionTier === "premium" &&
+      metadata.subscriptionStatus === "active")
+  );
+}
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
 
@@ -34,39 +57,59 @@ export default clerkMiddleware(async (auth, req) => {
       return Response.redirect(loginUrl);
     }
 
-    // Check for pro status - use same logic as subscription library
-    const metadata = sessionClaims?.publicMetadata as PublicMetadata;
-    const isPro =
-      metadata?.isPro === true ||
-      (metadata?.subscriptionTier === "premium" &&
-        metadata?.subscriptionStatus === "active");
-
     // Development override - bypass subscription check with cookie
     const cookies = req.headers.get("cookie") || "";
     const isDevOverride =
       cookies.includes("dev_pro_override=true") &&
       process.env.NODE_ENV === "development";
 
+    if (isDevOverride) {
+      return; // Allow access in development mode
+    }
+
+    // Check cached session metadata first (fast path)
+    const cachedMetadata = sessionClaims?.publicMetadata as PublicMetadata;
+    let isPro = isUserPro(cachedMetadata);
+
+    // If user appears to be free tier from cached data, verify with fresh data
+    // This solves the session token refresh lag issue permanently
+    if (!isPro) {
+      console.log(
+        `[MIDDLEWARE] User ${userId} appears free in cache, checking fresh data...`
+      );
+
+      const freshMetadata = await getFreshUserMetadata(userId);
+      isPro = isUserPro(freshMetadata);
+
+      if (isPro) {
+        console.log(
+          `[MIDDLEWARE] User ${userId} is actually Pro - cached session outdated`
+        );
+      }
+    }
+
     // Production: Allow temporary access after Stripe checkout while webhook processes
     const url = new URL(req.url);
     const isPaymentSuccess = url.searchParams.get("payment_success") === "true";
-    const isCheckoutSuccess = url.searchParams.get("success") === "true"; // Stripe default parameter
+    const isCheckoutSuccess = url.searchParams.get("success") === "true";
     const hasPaymentParams = isPaymentSuccess || isCheckoutSuccess;
 
-    // Debug logging (remove in production)
+    // Debug logging for dashboard routes
     if (req.url.includes("/dashboard")) {
       console.log("[MIDDLEWARE DEBUG]", {
         userId,
-        metadata,
+        cachedMetadata,
         isPro,
-        isDevOverride,
         hasPaymentParams,
         url: req.url,
       });
     }
 
-    if (!isPro && !isDevOverride && !hasPaymentParams) {
+    if (!isPro && !hasPaymentParams) {
       // User is not a pro member, redirect to pricing page
+      console.log(
+        `[MIDDLEWARE] Redirecting user ${userId} to pricing - not Pro`
+      );
       const pricingUrl = new URL("/pricing", req.url);
       return Response.redirect(pricingUrl);
     }
