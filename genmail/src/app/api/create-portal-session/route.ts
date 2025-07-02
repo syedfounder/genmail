@@ -28,20 +28,79 @@ export async function POST() {
 
     if (!stripeCustomerId) {
       return NextResponse.json(
-        { error: "No active subscription found" },
+        {
+          error:
+            "No active subscription found. Please subscribe to access billing management.",
+        },
         { status: 400 }
       );
     }
 
+    // Development bypass for invalid test customer IDs
+    if (
+      process.env.NODE_ENV === "development" &&
+      stripeCustomerId.includes("test_dev")
+    ) {
+      console.log(
+        "[create-portal-session] Development bypass: simulating portal access"
+      );
+      // Return a fake success that redirects back to settings with a message
+      const returnUrl = `http://localhost:3000/dashboard/settings?dev_portal=true`;
+      return NextResponse.json({ url: returnUrl });
+    }
+
+    // Ensure we have a return URL
+    const returnUrl = process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings`
+      : `${
+          process.env.VERCEL_URL
+            ? `https://${process.env.VERCEL_URL}`
+            : "http://localhost:3000"
+        }/dashboard/settings`;
+
     // Create Stripe portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
+      return_url: returnUrl,
     });
 
     return NextResponse.json({ url: portalSession.url });
-  } catch (error) {
-    console.error("Error creating portal session:", error);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("[create-portal-session] Error:", errorMessage);
+
+    // Handle specific Stripe errors
+    if (
+      error &&
+      typeof error === "object" &&
+      "type" in error &&
+      "code" in error
+    ) {
+      const stripeError = error as { type: string; code: string };
+      if (
+        stripeError.type === "StripeInvalidRequestError" &&
+        stripeError.code === "resource_missing"
+      ) {
+        // Development bypass for invalid customer IDs
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            "[create-portal-session] Development bypass: invalid customer ID, simulating portal"
+          );
+          const returnUrl = `http://localhost:3000/dashboard/settings?dev_portal=true`;
+          return NextResponse.json({ url: returnUrl });
+        }
+
+        return NextResponse.json(
+          {
+            error:
+              "Invalid subscription data. Please contact support if this persists.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     return NextResponse.json(
       { error: "Failed to create portal session" },
       { status: 500 }

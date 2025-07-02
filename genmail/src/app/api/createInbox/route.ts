@@ -66,7 +66,6 @@ function getExpirationDate(ttl?: string): Date {
 
 // Helper function to extract client IP from request headers
 function getClientIP(request: NextRequest): string {
-  // Check multiple headers in order of preference
   const headers = [
     "cf-connecting-ip", // Cloudflare
     "x-forwarded-for", // Standard proxy header
@@ -86,43 +85,25 @@ function getClientIP(request: NextRequest): string {
       // Handle IPv6 localhost normalization
       if (ip === "::1") ip = "127.0.0.1";
 
-      // Validate the IP format (basic check)
+      // Basic IP validation
       if (ip && ip !== "unknown" && !ip.includes("<script")) {
-        console.log(`[IP Detection] Found IP ${ip} from header: ${header}`);
         return ip;
       }
     }
   }
 
-  // If we reach here, we couldn't detect the IP - this is a problem in production
-  console.warn(
-    "[IP Detection] Could not detect client IP - using fallback 127.0.0.1"
-  );
-  console.warn(
-    "[IP Detection] Available headers:",
-    Object.fromEntries(request.headers.entries())
-  );
-
+  // Fallback for development
   return "127.0.0.1";
 }
 
 export async function POST(request: NextRequest) {
-  console.log("--- [API /api/createInbox] Received request ---");
   try {
     const { userId } = await auth();
-    console.log(`[API /api/createInbox] Auth check: userId is ${userId}`);
 
     const body = await request.json().catch(() => ({}));
     const { custom_name, password, ttl, subscription_tier = "free" } = body;
 
     const clientIP = getClientIP(request);
-    console.log(`[API /api/createInbox] Detected client IP: ${clientIP}`);
-    console.log(`[API /api/createInbox] Request headers for debugging:`, {
-      "cf-connecting-ip": request.headers.get("cf-connecting-ip"),
-      "x-forwarded-for": request.headers.get("x-forwarded-for"),
-      "x-real-ip": request.headers.get("x-real-ip"),
-      "user-agent": request.headers.get("user-agent")?.substring(0, 50) + "...",
-    });
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -135,72 +116,34 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(cleanSupabaseUrl, supabaseServiceKey);
 
     // Determine final subscription tier
-    // For anonymous users, always use "free"
-    // For authenticated users, use the provided subscription_tier (could be "premium" if they're subscribers)
     const finalSubscriptionTier = userId ? subscription_tier : "free";
-    console.log(`[API /api/createInbox] Subscription tier determination:`, {
-      userId: userId ? "authenticated" : "anonymous",
-      providedTier: subscription_tier,
-      finalTier: finalSubscriptionTier,
-      willCheckRateLimit: finalSubscriptionTier === "free",
-    });
 
-    // For free tier, implement robust rate limiting
+    // For free tier, implement rate limiting
     if (finalSubscriptionTier === "free") {
-      console.log(
-        `[API /api/createInbox] Checking rate limit for IP: ${clientIP}`
-      );
-
-      // CRITICAL: We must enforce rate limiting before any database operations
-      // since service role bypasses RLS policies
-
       let rateLimitPassed = false;
       let dbRateLimitWorking = false;
 
-      // First try the database function
+      // Check database rate limiting
       try {
-        console.log(
-          `[API /api/createInbox] Calling check_inbox_rate_limit with IP: ${clientIP}`
-        );
         const { data: rateLimitCheck, error: rateLimitError } =
           await supabase.rpc("check_inbox_rate_limit", { client_ip: clientIP });
-
-        console.log(`[API /api/createInbox] Rate limit RPC response:`, {
-          data: rateLimitCheck,
-          error: rateLimitError,
-        });
 
         if (!rateLimitError && rateLimitCheck !== null) {
           dbRateLimitWorking = true;
           rateLimitPassed = rateLimitCheck === true;
-          console.log(
-            `[API /api/createInbox] DB rate limit check result: ${rateLimitPassed} (dbWorking: ${dbRateLimitWorking})`
-          );
         } else {
-          console.error(
-            "[API /api/createInbox] CRITICAL: DB rate limiting failed in production:",
-            rateLimitError
-          );
-          // In production, if DB rate limiting fails, we should block to be safe
+          console.error("DB rate limiting failed:", rateLimitError);
           dbRateLimitWorking = false;
           rateLimitPassed = false;
         }
       } catch (error) {
-        console.error(
-          "[API /api/createInbox] CRITICAL: DB rate limiting exception:",
-          error
-        );
-        // In production, if DB rate limiting fails, we should block to be safe
+        console.error("DB rate limiting exception:", error);
         dbRateLimitWorking = false;
         rateLimitPassed = false;
       }
 
-      // If database rate limiting isn't working, block the request in production
-      // In-memory backup is unreliable in serverless environments like Vercel
+      // If database rate limiting isn't working, block the request
       if (!dbRateLimitWorking) {
-        console.error(
-          `[API /api/createInbox] PRODUCTION SAFETY: Blocking request due to DB rate limiting failure for IP: ${clientIP}`
-        );
         return NextResponse.json(
           {
             error:
@@ -211,11 +154,8 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // ENFORCE RATE LIMITING: If rate limit check failed, absolutely block the request
+      // Enforce rate limiting
       if (!rateLimitPassed) {
-        console.warn(
-          `[API /api/createInbox] Rate limit exceeded for IP: ${clientIP} - BLOCKING REQUEST`
-        );
         return NextResponse.json(
           {
             error:
@@ -226,11 +166,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // ADDITIONAL SAFETY CHECK: Double-check rate limit right before insertion
-      // This helps prevent race conditions in high-traffic scenarios
-      console.log(
-        `[API /api/createInbox] Performing final rate limit verification for IP: ${clientIP}`
-      );
+      // Double-check rate limit before insertion
       try {
         const { data: finalCheck, error: finalError } = await supabase.rpc(
           "check_inbox_rate_limit",
@@ -238,10 +174,6 @@ export async function POST(request: NextRequest) {
         );
 
         if (finalError || finalCheck !== true) {
-          console.warn(
-            `[API /api/createInbox] Final rate limit check failed for IP: ${clientIP}`,
-            { data: finalCheck, error: finalError }
-          );
           return NextResponse.json(
             {
               error:
@@ -251,14 +183,8 @@ export async function POST(request: NextRequest) {
             { status: 429 }
           );
         }
-        console.log(
-          `[API /api/createInbox] Final rate limit check passed for IP: ${clientIP}`
-        );
       } catch (error) {
-        console.error(
-          `[API /api/createInbox] Final rate limit check exception for IP: ${clientIP}`,
-          error
-        );
+        console.error("Final rate limit check exception:", error);
         return NextResponse.json(
           {
             error:
@@ -268,17 +194,10 @@ export async function POST(request: NextRequest) {
           { status: 503 }
         );
       }
-
-      console.log(
-        `[API /api/createInbox] All rate limit checks passed for IP: ${clientIP} - proceeding with inbox creation`
-      );
     }
 
     // Check inbox limits for authenticated users
     if (userId) {
-      console.log(
-        `[API /api/createInbox] Checking inbox limits for authenticated user: ${userId}`
-      );
       const { count, error: countError } = await supabase
         .from("inboxes")
         .select("user_id", { count: "exact", head: true })
@@ -286,17 +205,11 @@ export async function POST(request: NextRequest) {
         .gt("expires_at", new Date().toISOString());
 
       if (countError) {
-        console.error(
-          `[API /api/createInbox] Error counting inboxes for user ${userId}:`,
-          countError
-        );
+        console.error("Error counting inboxes for user:", countError);
       }
 
       const maxInboxes = 10;
       if (count !== null && count >= maxInboxes) {
-        console.warn(
-          `[API /api/createInbox] User ${userId} has reached the inbox limit of ${maxInboxes}`
-        );
         return NextResponse.json(
           { error: "You have reached the maximum number of inboxes." },
           { status: 403 }
@@ -304,23 +217,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Set the client IP in the database context for rate limiting
-    // This allows the trigger and RLS policies to access the real IP
-    console.log(
-      `[API /api/createInbox] Setting client IP in database context: ${clientIP}`
-    );
-    const { error: configError } = await supabase.rpc("set_client_ip", {
-      ip_address: clientIP,
-    });
+    // Set client IP context (for any remaining triggers)
+    await supabase.rpc("set_client_ip", { ip_address: clientIP });
 
-    if (configError) {
-      console.warn(
-        "[API /api/createInbox] Could not set IP context:",
-        configError
-      );
-    }
-
-    // Generate a unique inbox ID
+    // Generate unique inbox ID
     const inboxId = uuidv4();
 
     // Create the inbox
@@ -339,62 +239,60 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error("[API /api/createInbox] Database error:", error);
+      console.error("Database error creating inbox:", error);
       return NextResponse.json(
         { error: "Failed to create inbox. Please try again." },
         { status: 500 }
       );
     }
 
-    // CRITICAL FIX: Explicitly record rate limiting attempt with consistent IP
-    // This ensures the IP used for rate limiting matches the IP used for checks
+    // Record rate limiting attempt for free tier
     if (finalSubscriptionTier === "free") {
-      console.log(
-        `[API /api/createInbox] Explicitly recording rate limiting attempt for IP: ${clientIP} and inbox: ${inboxId}`
-      );
       try {
         const { error: rateLimitRecordError } = await supabase
           .from("inbox_rate_limits")
           .insert({
-            ip_address: clientIP, // Use the same IP we checked against
+            ip_address: clientIP,
             inbox_id: inboxId,
             created_at: new Date().toISOString(),
           });
 
         if (rateLimitRecordError) {
           console.error(
-            "[API /api/createInbox] CRITICAL: Failed to record rate limiting attempt:",
+            "Failed to record rate limiting attempt:",
             rateLimitRecordError
-          );
-          // Don't fail the request, but log this serious issue
-        } else {
-          console.log(
-            "[API /api/createInbox] Rate limiting attempt successfully recorded"
           );
         }
       } catch (error) {
-        console.error(
-          "[API /api/createInbox] CRITICAL: Exception recording rate limiting attempt:",
-          error
-        );
-        // Don't fail the request, but log this serious issue
+        console.error("Exception recording rate limiting attempt:", error);
       }
     }
 
-    console.log("[API /api/createInbox] Inbox created successfully:", data);
-    return NextResponse.json({
-      success: true,
-      inboxId: data.id,
-      emailAddress: data.email_address,
-      expiresAt: data.expires_at,
-      ...data,
-    });
-  } catch (e: unknown) {
-    const errorMessage =
-      e instanceof Error ? e.message : "An unknown error occurred";
-    console.error("[API /api/createInbox] Unhandled exception:", e);
+    // Return the inbox data in the format expected by the frontend
     return NextResponse.json(
-      { error: "Internal server error", details: errorMessage },
+      {
+        // Database/store format (for dashboard)
+        id: data.id,
+        email_address: data.email_address,
+        created_at: data.created_at,
+        expires_at: data.expires_at,
+        is_active: data.is_active,
+        password_hash: data.password_hash,
+        custom_name: data.custom_name,
+        user_id: data.user_id,
+        subscription_tier: data.subscription_tier,
+        // Legacy format (for main page)
+        success: true,
+        inboxId: data.id,
+        emailAddress: data.email_address,
+        expiresAt: data.expires_at,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Unhandled exception in createInbox:", error);
+    return NextResponse.json(
+      { error: "Internal server error. Please try again." },
       { status: 500 }
     );
   }

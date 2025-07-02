@@ -36,14 +36,19 @@ export function BillingCard() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to access billing portal");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to access billing portal");
       }
 
       const { url } = await response.json();
       window.location.href = url;
     } catch (error) {
       console.error("Error accessing billing portal:", error);
-      toast.error("Failed to access billing portal. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to access billing portal. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
