@@ -94,21 +94,44 @@ function validateSupabaseUrl(url: string): string {
 
 // Helper function to extract client IP from request headers
 function getClientIP(request: NextRequest): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    const ip = forwardedFor.split(",")[0].trim();
-    // Normalize IPv6 localhost to IPv4 for consistency
-    return ip === "::1" ? "127.0.0.1" : ip;
+  // Check multiple headers in order of preference
+  const headers = [
+    "cf-connecting-ip", // Cloudflare
+    "x-forwarded-for", // Standard proxy header
+    "x-real-ip", // Nginx proxy
+    "x-client-ip", // Apache
+    "x-forwarded", // General
+    "forwarded-for", // Alternative
+    "forwarded", // RFC 7239
+  ];
+
+  for (const header of headers) {
+    const value = request.headers.get(header);
+    if (value) {
+      // For forwarded-for headers, take the first (original client) IP
+      let ip = value.split(",")[0].trim();
+
+      // Handle IPv6 localhost normalization
+      if (ip === "::1") ip = "127.0.0.1";
+
+      // Validate the IP format (basic check)
+      if (ip && ip !== "unknown" && !ip.includes("<script")) {
+        console.log(`[IP Detection] Found IP ${ip} from header: ${header}`);
+        return ip;
+      }
+    }
   }
-  const realIP = request.headers.get("x-real-ip");
-  if (realIP) {
-    const ip = realIP.trim();
-    // Normalize IPv6 localhost to IPv4 for consistency
-    return ip === "::1" ? "127.0.0.1" : ip;
-  }
-  // Fallback - NextRequest doesn't have ip property, so use default
-  const ip = "127.0.0.1";
-  return ip;
+
+  // If we reach here, we couldn't detect the IP - this is a problem in production
+  console.warn(
+    "[IP Detection] Could not detect client IP - using fallback 127.0.0.1"
+  );
+  console.warn(
+    "[IP Detection] Available headers:",
+    Object.fromEntries(request.headers.entries())
+  );
+
+  return "127.0.0.1";
 }
 
 export async function POST(request: NextRequest) {
@@ -121,6 +144,13 @@ export async function POST(request: NextRequest) {
     const { custom_name, password, ttl, subscription_tier = "free" } = body;
 
     const clientIP = getClientIP(request);
+    console.log(`[API /api/createInbox] Detected client IP: ${clientIP}`);
+    console.log(`[API /api/createInbox] Request headers for debugging:`, {
+      "cf-connecting-ip": request.headers.get("cf-connecting-ip"),
+      "x-forwarded-for": request.headers.get("x-forwarded-for"),
+      "x-real-ip": request.headers.get("x-real-ip"),
+      "user-agent": request.headers.get("user-agent")?.substring(0, 50) + "...",
+    });
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -136,6 +166,12 @@ export async function POST(request: NextRequest) {
     // For anonymous users, always use "free"
     // For authenticated users, use the provided subscription_tier (could be "premium" if they're subscribers)
     const finalSubscriptionTier = userId ? subscription_tier : "free";
+    console.log(`[API /api/createInbox] Subscription tier determination:`, {
+      userId: userId ? "authenticated" : "anonymous",
+      providedTier: subscription_tier,
+      finalTier: finalSubscriptionTier,
+      willCheckRateLimit: finalSubscriptionTier === "free",
+    });
 
     // For free tier, implement robust rate limiting
     if (finalSubscriptionTier === "free") {
@@ -151,14 +187,22 @@ export async function POST(request: NextRequest) {
 
       // First try the database function
       try {
+        console.log(
+          `[API /api/createInbox] Calling check_inbox_rate_limit with IP: ${clientIP}`
+        );
         const { data: rateLimitCheck, error: rateLimitError } =
           await supabase.rpc("check_inbox_rate_limit", { client_ip: clientIP });
+
+        console.log(`[API /api/createInbox] Rate limit RPC response:`, {
+          data: rateLimitCheck,
+          error: rateLimitError,
+        });
 
         if (!rateLimitError && rateLimitCheck !== null) {
           dbRateLimitWorking = true;
           rateLimitPassed = rateLimitCheck === true;
           console.log(
-            `[API /api/createInbox] DB rate limit check result: ${rateLimitPassed}`
+            `[API /api/createInbox] DB rate limit check result: ${rateLimitPassed} (dbWorking: ${dbRateLimitWorking})`
           );
         } else {
           console.warn(
