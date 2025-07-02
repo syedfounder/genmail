@@ -3,34 +3,38 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
 
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = "force-dynamic";
 
 // Helper function to validate and clean URL
 function validateSupabaseUrl(url: string): string {
-  if (!url) {
-    throw new Error("Supabase URL is required");
+  if (!url.startsWith("https://") && !url.startsWith("http://")) {
+    throw new Error("Invalid Supabase URL format");
   }
-  const cleanUrl = url
-    .replace(/^value:\s*/i, "")
-    .replace(/^["']|["']$/g, "")
-    .trim();
-  if (!cleanUrl) {
-    throw new Error("Supabase URL is empty after cleaning");
-  }
-  if (
-    !cleanUrl.startsWith("https://") &&
-    !cleanUrl.startsWith("http://127.0.0.1") &&
-    !cleanUrl.startsWith("http://localhost")
-  ) {
-    throw new Error(`Invalid Supabase URL format: ${cleanUrl}`);
-  }
-  try {
-    new URL(cleanUrl);
-    return cleanUrl;
-  } catch {
-    throw new Error(`Invalid Supabase URL - failed to parse: ${cleanUrl}.`);
+  return url.trim();
+}
+
+// Helper function to generate random string for email addresses
+function generateRandomString(length: number): string {
+  return Math.random()
+    .toString(36)
+    .substring(2, 2 + length);
+}
+
+// Helper function to parse TTL and return expiration date
+function getExpirationDate(ttl?: string): Date {
+  const now = new Date();
+  switch (ttl) {
+    case "1h":
+      return new Date(now.getTime() + 60 * 60 * 1000);
+    case "24h":
+      return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    case "1w":
+      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    default:
+      return new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes default
   }
 }
 
@@ -244,6 +248,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check inbox limits for authenticated users
+    if (userId) {
+      console.log(
+        `[API /api/createInbox] Checking inbox limits for authenticated user: ${userId}`
+      );
+      const { count, error: countError } = await supabase
+        .from("inboxes")
+        .select("user_id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gt("expires_at", new Date().toISOString());
+
+      if (countError) {
+        console.error(
+          `[API /api/createInbox] Error counting inboxes for user ${userId}:`,
+          countError
+        );
+      }
+
+      const maxInboxes = 10;
+      if (count !== null && count >= maxInboxes) {
+        console.warn(
+          `[API /api/createInbox] User ${userId} has reached the inbox limit of ${maxInboxes}`
+        );
+        return NextResponse.json(
+          { error: "You have reached the maximum number of inboxes." },
+          { status: 403 }
+        );
+      }
+    }
+
     // Set the client IP in the database context for rate limiting
     // This allows the trigger and RLS policies to access the real IP
     console.log(
@@ -258,134 +292,66 @@ export async function POST(request: NextRequest) {
         "[API /api/createInbox] Could not set IP context:",
         configError
       );
-      // Continue anyway - the trigger will fall back to header extraction
     }
 
-    if (userId) {
-      // Authenticated user logic: Check total inbox count
-      console.log(`[API /api/createInbox] Authenticated user ID: ${userId}`);
-      const { count, error: countError } = await supabase
-        .from("inboxes")
-        .select("user_id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gt("expires_at", new Date().toISOString());
+    // Generate a unique inbox ID
+    const inboxId = uuidv4();
 
-      if (countError) {
-        console.error(
-          `[API /api/createInbox] Supabase error counting inboxes for user ${userId}:`,
-          countError
-        );
-      }
-
-      const maxInboxes = 10;
-      if (count !== null && count >= maxInboxes) {
-        console.warn(
-          `[API /api/createInbox] User ${userId} has reached the inbox limit of ${maxInboxes}.`
-        );
-        return NextResponse.json(
-          { error: "You have reached the maximum number of inboxes." },
-          { status: 403 }
-        );
-      }
-    }
-
-    // Generate email and expiration
-    const randomId = Math.random().toString(36).substring(2, 10);
-    const emailAddress = `${randomId}@gminbox.com`;
-    let expiresAt: Date;
-    const now = new Date();
-    switch (ttl) {
-      case "1h":
-        expiresAt = new Date(now.getTime() + 60 * 60 * 1000);
-        break;
-      case "24h":
-        expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        break;
-      case "1w":
-        expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
-        break;
-    }
-
-    let password_hash = null;
-    if (password && password.length > 0) {
-      const salt = await bcrypt.genSalt(10);
-      password_hash = await bcrypt.hash(password, salt);
-    }
-
-    const inboxToInsert = {
-      email_address: emailAddress,
-      expires_at: expiresAt.toISOString(),
-      created_at: now.toISOString(),
-      is_active: true,
-      user_id: userId,
-      subscription_tier: finalSubscriptionTier,
-      custom_name: userId ? custom_name : null,
-      password_hash: userId ? password_hash : null,
-    };
-
+    // Create the inbox
     const { data, error } = await supabase
       .from("inboxes")
-      .insert(inboxToInsert)
+      .insert({
+        id: inboxId,
+        email_address: `${generateRandomString(8)}@gminbox.com`,
+        expires_at: getExpirationDate(ttl).toISOString(),
+        user_id: userId,
+        custom_name: custom_name || null,
+        password_hash: password ? await bcrypt.hash(password, 10) : null,
+        subscription_tier: finalSubscriptionTier,
+      })
       .select()
       .single();
 
     if (error) {
-      console.error(
-        "[API /api/createInbox] Supabase insert error:",
-        error.message,
-        "Code:",
-        error.code,
-        "Details:",
-        error.details
-      );
-      let userFriendlyMessage = "Failed to create inbox in database.";
-      if (error.message.includes("duplicate")) {
-        userFriendlyMessage = "Email address already exists. Please try again.";
-      }
+      console.error("[API /api/createInbox] Database error:", error);
       return NextResponse.json(
-        {
-          error: userFriendlyMessage,
-          details: error.message,
-          debug: {
-            code: error.code,
-            details: error.details,
-            emailAddress: inboxToInsert.email_address,
-          },
-        },
+        { error: "Failed to create inbox. Please try again." },
         { status: 500 }
       );
     }
 
-    // If using backup rate limiting, record the successful attempt
+    // CRITICAL FIX: Explicitly record rate limiting attempt with consistent IP
+    // This ensures the IP used for rate limiting matches the IP used for checks
     if (finalSubscriptionTier === "free") {
+      console.log(
+        `[API /api/createInbox] Explicitly recording rate limiting attempt for IP: ${clientIP} and inbox: ${inboxId}`
+      );
       try {
-        // Verify that database recorded the attempt
-        const { data: recorded } = await supabase
+        const { error: rateLimitRecordError } = await supabase
           .from("inbox_rate_limits")
-          .select("id")
-          .eq("inbox_id", data.id)
-          .maybeSingle();
+          .insert({
+            ip_address: clientIP, // Use the same IP we checked against
+            inbox_id: inboxId,
+            created_at: new Date().toISOString(),
+          });
 
-        if (!recorded) {
+        if (rateLimitRecordError) {
           console.error(
-            "[API /api/createInbox] CRITICAL: Database failed to record rate limiting attempt for inbox:",
-            data.id
+            "[API /api/createInbox] CRITICAL: Failed to record rate limiting attempt:",
+            rateLimitRecordError
           );
-          // This is a serious issue - the rate limiting tracking failed
-          // We should consider this a system error
+          // Don't fail the request, but log this serious issue
         } else {
           console.log(
-            "[API /api/createInbox] Rate limiting attempt successfully recorded in database"
+            "[API /api/createInbox] Rate limiting attempt successfully recorded"
           );
         }
       } catch (error) {
         console.error(
-          "[API /api/createInbox] Error verifying rate limiting record:",
+          "[API /api/createInbox] CRITICAL: Exception recording rate limiting attempt:",
           error
         );
+        // Don't fail the request, but log this serious issue
       }
     }
 
