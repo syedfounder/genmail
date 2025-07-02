@@ -7,64 +7,6 @@ import bcrypt from "bcryptjs";
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = "force-dynamic";
 
-// Backup in-memory rate limiting for home page (5 per hour)
-const rateLimitMap = new Map<
-  string,
-  { count: number; firstAttempt: number; attempts: number[] }
->();
-const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
-const RATE_LIMIT_MAX_ATTEMPTS = 5;
-
-function checkInMemoryRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-
-  if (!record) {
-    rateLimitMap.set(ip, { count: 1, firstAttempt: now, attempts: [now] });
-    return true;
-  }
-
-  // Filter out attempts older than 1 hour
-  record.attempts = record.attempts.filter(
-    (attempt) => now - attempt < RATE_LIMIT_WINDOW
-  );
-
-  // Check if under limit
-  if (record.attempts.length < RATE_LIMIT_MAX_ATTEMPTS) {
-    record.attempts.push(now);
-    record.count = record.attempts.length;
-    return true;
-  }
-
-  // Clean up old entries periodically
-  if (rateLimitMap.size > 1000) {
-    const entries = Array.from(rateLimitMap.entries());
-    for (let i = 0; i < entries.length; i++) {
-      const [key, value] = entries[i];
-      if (
-        now - value.firstAttempt > RATE_LIMIT_WINDOW &&
-        value.attempts.every((attempt) => now - attempt > RATE_LIMIT_WINDOW)
-      ) {
-        rateLimitMap.delete(key);
-      }
-    }
-  }
-
-  return false;
-}
-
-function recordInMemoryAttempt(ip: string): void {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-
-  if (!record) {
-    rateLimitMap.set(ip, { count: 1, firstAttempt: now, attempts: [now] });
-  } else {
-    record.attempts.push(now);
-    record.count = record.attempts.length;
-  }
-}
-
 // Helper function to validate and clean URL
 function validateSupabaseUrl(url: string): string {
   if (!url) {
@@ -205,23 +147,37 @@ export async function POST(request: NextRequest) {
             `[API /api/createInbox] DB rate limit check result: ${rateLimitPassed} (dbWorking: ${dbRateLimitWorking})`
           );
         } else {
-          console.warn(
-            "[API /api/createInbox] DB rate limiting not working:",
+          console.error(
+            "[API /api/createInbox] CRITICAL: DB rate limiting failed in production:",
             rateLimitError
           );
+          // In production, if DB rate limiting fails, we should block to be safe
+          dbRateLimitWorking = false;
+          rateLimitPassed = false;
         }
       } catch (error) {
-        console.warn("[API /api/createInbox] DB rate limiting failed:", error);
+        console.error(
+          "[API /api/createInbox] CRITICAL: DB rate limiting exception:",
+          error
+        );
+        // In production, if DB rate limiting fails, we should block to be safe
+        dbRateLimitWorking = false;
+        rateLimitPassed = false;
       }
 
-      // If database rate limiting isn't working, use in-memory backup
+      // If database rate limiting isn't working, block the request in production
+      // In-memory backup is unreliable in serverless environments like Vercel
       if (!dbRateLimitWorking) {
-        console.log(
-          `[API /api/createInbox] Using backup rate limiting for IP: ${clientIP}`
+        console.error(
+          `[API /api/createInbox] PRODUCTION SAFETY: Blocking request due to DB rate limiting failure for IP: ${clientIP}`
         );
-        rateLimitPassed = checkInMemoryRateLimit(clientIP);
-        console.log(
-          `[API /api/createInbox] Backup rate limit check result: ${rateLimitPassed}`
+        return NextResponse.json(
+          {
+            error:
+              "Rate limiting service temporarily unavailable. Please try again in a few minutes.",
+            code: "RATE_LIMIT_SERVICE_ERROR",
+          },
+          { status: 503 }
         );
       }
 
@@ -240,8 +196,51 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // ADDITIONAL SAFETY CHECK: Double-check rate limit right before insertion
+      // This helps prevent race conditions in high-traffic scenarios
       console.log(
-        `[API /api/createInbox] Rate limit check passed for IP: ${clientIP}`
+        `[API /api/createInbox] Performing final rate limit verification for IP: ${clientIP}`
+      );
+      try {
+        const { data: finalCheck, error: finalError } = await supabase.rpc(
+          "check_inbox_rate_limit",
+          { client_ip: clientIP }
+        );
+
+        if (finalError || finalCheck !== true) {
+          console.warn(
+            `[API /api/createInbox] Final rate limit check failed for IP: ${clientIP}`,
+            { data: finalCheck, error: finalError }
+          );
+          return NextResponse.json(
+            {
+              error:
+                "Rate limit exceeded. You can create up to 5 inboxes per hour.",
+              code: "RATE_LIMIT_EXCEEDED",
+            },
+            { status: 429 }
+          );
+        }
+        console.log(
+          `[API /api/createInbox] Final rate limit check passed for IP: ${clientIP}`
+        );
+      } catch (error) {
+        console.error(
+          `[API /api/createInbox] Final rate limit check exception for IP: ${clientIP}`,
+          error
+        );
+        return NextResponse.json(
+          {
+            error:
+              "Rate limiting service temporarily unavailable. Please try again in a few minutes.",
+            code: "RATE_LIMIT_SERVICE_ERROR",
+          },
+          { status: 503 }
+        );
+      }
+
+      console.log(
+        `[API /api/createInbox] All rate limit checks passed for IP: ${clientIP} - proceeding with inbox creation`
       );
     }
 
@@ -363,7 +362,7 @@ export async function POST(request: NextRequest) {
     // If using backup rate limiting, record the successful attempt
     if (finalSubscriptionTier === "free") {
       try {
-        // Check if database recorded the attempt
+        // Verify that database recorded the attempt
         const { data: recorded } = await supabase
           .from("inbox_rate_limits")
           .select("id")
@@ -371,17 +370,22 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (!recorded) {
-          console.log(
-            "[API /api/createInbox] DB didn't record attempt, using backup tracking"
+          console.error(
+            "[API /api/createInbox] CRITICAL: Database failed to record rate limiting attempt for inbox:",
+            data.id
           );
-          recordInMemoryAttempt(clientIP);
+          // This is a serious issue - the rate limiting tracking failed
+          // We should consider this a system error
+        } else {
+          console.log(
+            "[API /api/createInbox] Rate limiting attempt successfully recorded in database"
+          );
         }
       } catch (error) {
-        console.log(
-          "[API /api/createInbox] Recording backup attempt due to error:",
+        console.error(
+          "[API /api/createInbox] Error verifying rate limiting record:",
           error
         );
-        recordInMemoryAttempt(clientIP);
       }
     }
 
