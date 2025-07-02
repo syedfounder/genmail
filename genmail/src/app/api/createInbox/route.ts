@@ -7,6 +7,64 @@ import bcrypt from "bcryptjs";
 // Force dynamic rendering to prevent static generation errors
 export const dynamic = "force-dynamic";
 
+// Backup in-memory rate limiting for home page (5 per hour)
+const rateLimitMap = new Map<
+  string,
+  { count: number; firstAttempt: number; attempts: number[] }
+>();
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_MAX_ATTEMPTS = 5;
+
+function checkInMemoryRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record) {
+    rateLimitMap.set(ip, { count: 1, firstAttempt: now, attempts: [now] });
+    return true;
+  }
+
+  // Filter out attempts older than 1 hour
+  record.attempts = record.attempts.filter(
+    (attempt) => now - attempt < RATE_LIMIT_WINDOW
+  );
+
+  // Check if under limit
+  if (record.attempts.length < RATE_LIMIT_MAX_ATTEMPTS) {
+    record.attempts.push(now);
+    record.count = record.attempts.length;
+    return true;
+  }
+
+  // Clean up old entries periodically
+  if (rateLimitMap.size > 1000) {
+    const entries = Array.from(rateLimitMap.entries());
+    for (let i = 0; i < entries.length; i++) {
+      const [key, value] = entries[i];
+      if (
+        now - value.firstAttempt > RATE_LIMIT_WINDOW &&
+        value.attempts.every((attempt) => now - attempt > RATE_LIMIT_WINDOW)
+      ) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }
+
+  return false;
+}
+
+function recordInMemoryAttempt(ip: string): void {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record) {
+    rateLimitMap.set(ip, { count: 1, firstAttempt: now, attempts: [now] });
+  } else {
+    record.attempts.push(now);
+    record.count = record.attempts.length;
+  }
+}
+
 // Helper function to validate and clean URL
 function validateSupabaseUrl(url: string): string {
   if (!url) {
@@ -74,6 +132,65 @@ export async function POST(request: NextRequest) {
     const cleanSupabaseUrl = validateSupabaseUrl(supabaseUrl);
     const supabase = createClient(cleanSupabaseUrl, supabaseServiceKey);
 
+    // For free tier, implement robust rate limiting
+    if (subscription_tier === "free") {
+      console.log(
+        `[API /api/createInbox] Checking rate limit for IP: ${clientIP}`
+      );
+
+      // First try the database function
+      let dbRateLimitWorking = false;
+      try {
+        const { data: rateLimitCheck, error: rateLimitError } =
+          await supabase.rpc("check_inbox_rate_limit", { client_ip: clientIP });
+
+        if (!rateLimitError && rateLimitCheck !== null) {
+          dbRateLimitWorking = true;
+          if (rateLimitCheck === false) {
+            console.warn(
+              `[API /api/createInbox] DB Rate limit exceeded for IP: ${clientIP}`
+            );
+            return NextResponse.json(
+              {
+                error:
+                  "Rate limit exceeded. You can create up to 5 inboxes per hour.",
+                code: "RATE_LIMIT_EXCEEDED",
+              },
+              { status: 429 }
+            );
+          }
+        } else {
+          console.warn(
+            "[API /api/createInbox] DB rate limiting not working:",
+            rateLimitError
+          );
+        }
+      } catch (error) {
+        console.warn("[API /api/createInbox] DB rate limiting failed:", error);
+      }
+
+      // If database rate limiting isn't working, use in-memory backup
+      if (!dbRateLimitWorking) {
+        console.log(
+          `[API /api/createInbox] Using backup rate limiting for IP: ${clientIP}`
+        );
+        const allowed = checkInMemoryRateLimit(clientIP);
+        if (!allowed) {
+          console.warn(
+            `[API /api/createInbox] Backup rate limit exceeded for IP: ${clientIP}`
+          );
+          return NextResponse.json(
+            {
+              error:
+                "Rate limit exceeded. You can create up to 5 inboxes per hour.",
+              code: "RATE_LIMIT_EXCEEDED",
+            },
+            { status: 429 }
+          );
+        }
+      }
+    }
+
     // Set the client IP in the database context for rate limiting
     // This allows the trigger and RLS policies to access the real IP
     console.log(
@@ -89,53 +206,6 @@ export async function POST(request: NextRequest) {
         configError
       );
       // Continue anyway - the trigger will fall back to header extraction
-    }
-
-    // For free tier, pre-check rate limiting for better error handling
-    if (subscription_tier === "free") {
-      console.log(
-        `[API /api/createInbox] Checking rate limit for IP: ${clientIP}`
-      );
-      const { data: rateLimitCheck, error: rateLimitError } =
-        await supabase.rpc("check_inbox_rate_limit", { client_ip: clientIP });
-
-      console.log(
-        `[API /api/createInbox] Rate limit check result - IP: ${clientIP}, allowed: ${rateLimitCheck}, error: ${
-          rateLimitError?.message || "none"
-        }`
-      );
-
-      if (rateLimitError) {
-        console.error(
-          "[API /api/createInbox] Rate limit check RPC error:",
-          rateLimitError
-        );
-        // SECURITY: If we can't check rate limiting, BLOCK the request for safety
-        // This prevents bypassing rate limiting when service is down
-        return NextResponse.json(
-          {
-            error: "Rate limiting service unavailable. Please try again later.",
-            code: "RATE_LIMIT_SERVICE_ERROR",
-          },
-          { status: 503 }
-        );
-      } else if (rateLimitCheck === false) {
-        console.warn(
-          `[API /api/createInbox] Rate limit exceeded for IP: ${clientIP}`
-        );
-        return NextResponse.json(
-          {
-            error:
-              "Rate limit exceeded. You can create up to 5 inboxes per hour.",
-            code: "RATE_LIMIT_EXCEEDED",
-          },
-          { status: 429 }
-        );
-      } else {
-        console.log(
-          `[API /api/createInbox] Rate limit check passed for IP: ${clientIP}`
-        );
-      }
     }
 
     if (userId) {
@@ -234,6 +304,31 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 }
       );
+    }
+
+    // If using backup rate limiting, record the successful attempt
+    if (subscription_tier === "free") {
+      try {
+        // Check if database recorded the attempt
+        const { data: recorded } = await supabase
+          .from("inbox_rate_limits")
+          .select("id")
+          .eq("inbox_id", data.id)
+          .maybeSingle();
+
+        if (!recorded) {
+          console.log(
+            "[API /api/createInbox] DB didn't record attempt, using backup tracking"
+          );
+          recordInMemoryAttempt(clientIP);
+        }
+      } catch (error) {
+        console.log(
+          "[API /api/createInbox] Recording backup attempt due to error:",
+          error
+        );
+        recordInMemoryAttempt(clientIP);
+      }
     }
 
     console.log("[API /api/createInbox] Inbox created successfully:", data);
