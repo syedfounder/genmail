@@ -10,10 +10,36 @@ export const dynamic = "force-dynamic";
 
 // Helper function to validate and clean URL
 function validateSupabaseUrl(url: string): string {
-  if (!url.startsWith("https://") && !url.startsWith("http://")) {
-    throw new Error("Invalid Supabase URL format");
+  if (!url) {
+    throw new Error("Supabase URL is required");
   }
-  return url.trim();
+
+  // Clean the URL - remove any prefixes or quotes that might be present
+  const cleanUrl = url
+    .replace(/^value:\s*/i, "")
+    .replace(/^["']|["']$/g, "")
+    .trim();
+
+  if (!cleanUrl) {
+    throw new Error("Supabase URL is empty after cleaning");
+  }
+
+  // Allow various URL formats for different environments
+  if (
+    !cleanUrl.startsWith("https://") &&
+    !cleanUrl.startsWith("http://127.0.0.1") &&
+    !cleanUrl.startsWith("http://localhost")
+  ) {
+    throw new Error(`Invalid Supabase URL format: ${cleanUrl}`);
+  }
+
+  // Validate that it's a proper URL
+  try {
+    new URL(cleanUrl);
+    return cleanUrl;
+  } catch {
+    throw new Error(`Invalid Supabase URL - failed to parse: ${cleanUrl}`);
+  }
 }
 
 // Helper function to generate random string for email addresses
