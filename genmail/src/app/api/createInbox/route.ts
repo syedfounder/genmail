@@ -132,33 +132,34 @@ export async function POST(request: NextRequest) {
     const cleanSupabaseUrl = validateSupabaseUrl(supabaseUrl);
     const supabase = createClient(cleanSupabaseUrl, supabaseServiceKey);
 
+    // Determine final subscription tier
+    // For anonymous users, always use "free"
+    // For authenticated users, use the provided subscription_tier (could be "premium" if they're subscribers)
+    const finalSubscriptionTier = userId ? subscription_tier : "free";
+
     // For free tier, implement robust rate limiting
-    if (subscription_tier === "free") {
+    if (finalSubscriptionTier === "free") {
       console.log(
         `[API /api/createInbox] Checking rate limit for IP: ${clientIP}`
       );
 
-      // First try the database function
+      // CRITICAL: We must enforce rate limiting before any database operations
+      // since service role bypasses RLS policies
+
+      let rateLimitPassed = false;
       let dbRateLimitWorking = false;
+
+      // First try the database function
       try {
         const { data: rateLimitCheck, error: rateLimitError } =
           await supabase.rpc("check_inbox_rate_limit", { client_ip: clientIP });
 
         if (!rateLimitError && rateLimitCheck !== null) {
           dbRateLimitWorking = true;
-          if (rateLimitCheck === false) {
-            console.warn(
-              `[API /api/createInbox] DB Rate limit exceeded for IP: ${clientIP}`
-            );
-            return NextResponse.json(
-              {
-                error:
-                  "Rate limit exceeded. You can create up to 5 inboxes per hour.",
-                code: "RATE_LIMIT_EXCEEDED",
-              },
-              { status: 429 }
-            );
-          }
+          rateLimitPassed = rateLimitCheck === true;
+          console.log(
+            `[API /api/createInbox] DB rate limit check result: ${rateLimitPassed}`
+          );
         } else {
           console.warn(
             "[API /api/createInbox] DB rate limiting not working:",
@@ -174,21 +175,30 @@ export async function POST(request: NextRequest) {
         console.log(
           `[API /api/createInbox] Using backup rate limiting for IP: ${clientIP}`
         );
-        const allowed = checkInMemoryRateLimit(clientIP);
-        if (!allowed) {
-          console.warn(
-            `[API /api/createInbox] Backup rate limit exceeded for IP: ${clientIP}`
-          );
-          return NextResponse.json(
-            {
-              error:
-                "Rate limit exceeded. You can create up to 5 inboxes per hour.",
-              code: "RATE_LIMIT_EXCEEDED",
-            },
-            { status: 429 }
-          );
-        }
+        rateLimitPassed = checkInMemoryRateLimit(clientIP);
+        console.log(
+          `[API /api/createInbox] Backup rate limit check result: ${rateLimitPassed}`
+        );
       }
+
+      // ENFORCE RATE LIMITING: If rate limit check failed, absolutely block the request
+      if (!rateLimitPassed) {
+        console.warn(
+          `[API /api/createInbox] Rate limit exceeded for IP: ${clientIP} - BLOCKING REQUEST`
+        );
+        return NextResponse.json(
+          {
+            error:
+              "Rate limit exceeded. You can create up to 5 inboxes per hour.",
+            code: "RATE_LIMIT_EXCEEDED",
+          },
+          { status: 429 }
+        );
+      }
+
+      console.log(
+        `[API /api/createInbox] Rate limit check passed for IP: ${clientIP}`
+      );
     }
 
     // Set the client IP in the database context for rate limiting
@@ -268,7 +278,7 @@ export async function POST(request: NextRequest) {
       created_at: now.toISOString(),
       is_active: true,
       user_id: userId,
-      subscription_tier: userId ? subscription_tier : "free",
+      subscription_tier: finalSubscriptionTier,
       custom_name: userId ? custom_name : null,
       password_hash: userId ? password_hash : null,
     };
@@ -307,7 +317,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If using backup rate limiting, record the successful attempt
-    if (subscription_tier === "free") {
+    if (finalSubscriptionTier === "free") {
       try {
         // Check if database recorded the attempt
         const { data: recorded } = await supabase
